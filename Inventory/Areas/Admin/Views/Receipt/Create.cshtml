@@ -1,0 +1,467 @@
+﻿@model Model.ViewModels.CreateReceiptViewModel
+@using Inventory.Common;
+@{
+    ViewBag.Title = "Thêm phiếu nhập kho";
+    Layout = "~/Areas/Admin/Views/Shared/_Layouts.cshtml";
+    Model.EF.InventoryDbContext db = new Model.EF.InventoryDbContext();
+    var credentials = Session[CommonConstants.SESSION_CREDENTIALS] as List<string>;
+    var userLogin = (UserLogin)Session[CommonConstants.USER_SESSION];
+    bool isAdmin = (userLogin.GroupID == "ADMIN") ? true : false;
+}
+
+@section header{
+    Thêm phiếu nhập kho
+}
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <div class="row">
+                    <div class="col-lg-6">
+                        <h4>Nhập thông tin phiếu nhập</h4>
+                    </div>
+                    <div class="col-lg-6 text-right">
+                        <button class="btn btn-success" id="saveReceiptButton"><i class="bi bi-save"></i> Lưu[Thêm]</button>
+                        <a href="@Url.Action("Index", "Receipt")" class="btn btn-info"><i class="fa fa-backward"></i> Quay lại</a>
+                    </div>
+                </div>
+            </div>
+            <div class="panel-body">
+                <div class="row">
+                    <div class="col-lg-12">
+
+                        @Html.AntiForgeryToken()
+
+                        <hr />
+                        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+                        <div class="col-lg-9">
+                            <div style="border-radius: 10px; border: 2px solid #ccc; margin:0 -10px; padding: 10px;">
+                                <h4>
+                                    Chi tiết phiếu nhập
+                                    <a href="#" id="addProductBtn" style="font-size:0.8em; float:right;@(isAdmin || (credentials != null && credentials.Contains("ADD_PRODUCT")) ? "" : "pointer-events: none;")">
+                                        + Sản phẩm mới
+                                    </a>
+                                </h4>
+                                <form id="searchProductForm" action="@Url.Action("SearchProduct", "Receipt")" method="post">
+                                    <input type="hidden" name="SearchCustomer" value="@Model.SearchSupplier" />
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" name="SearchProduct" value="@Model.SearchProduct" placeholder="Nhập tên hoặc mã của sản phẩm">
+                                        <span class="input-group-btn">
+                                            <button class="btn btn-primary" type="submit">
+                                                <i class="fa fa-search"></i>
+                                            </button>
+                                        </span>
+                                    </div>
+                                </form>
+                                <br />
+                                <div id="productTableContainer">
+                                    @Html.Partial("_ReceiptDetail", Model.Products)
+                                </div>
+                            </div>
+                            <div style="border-radius: 10px; border: 2px solid #ccc; margin: 10px -10px; padding: 10px;">
+                                <table style="width: 100%;">
+                                    <tr>
+                                        <td style="width: 60%;">
+                                            <h5><b>Ghi chú</b></h5>
+                                            <textarea id="receiptDescription" placeholder="Nhập ghi chú cho phiếu nhập" style="width: 90%; border: none; box-shadow: 0 0 3px rgba(0, 0, 0, 0.3); height: 70px; padding: 5px;"></textarea>
+                                        </td>
+                                        <td style="width: 20%;">
+                                            <h5>Tổng số</h5>
+                                            <h5>Thành tiền</h5>
+                                        </td>
+                                        <td style="width:20%; text-align : right;">
+                                            <h5 id="totalAmount">0</h5>
+                                            <h5 id="totalPrice">0 đ</h5>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="4"><h2></h2></td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="1">
+                                            <h5><b>Tình trạng Thanh toán</b></h5>
+                                        </td>
+                                        <td colspan="3" style="text-align:right;">
+                                            <input type="radio" name="PaymentStatus" value="false" onchange="showPaymentMethodForm(this);"/> Chưa thanh toán
+                                            <span style="margin:10px"></span>
+                                            <input type="radio" name="PaymentStatus" value="true" onchange="showPaymentMethodForm(this);"/> Đã thanh toán
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="4">
+                                            <hr style="border: 1px solid #ccc;" />
+                                        </td>
+                                    </tr>
+                                    <tr id="paymentMethodRow" style="display:none;">
+                                        <td colspan="1">
+                                            <h5><b>Hình thức Thanh toán</b></h5>
+                                        </td>
+                                        <td colspan="3" style="text-align:right;">
+                                            <input type="radio" name="Payment" value="false" /> Tiền mặt
+                                            <span style="margin:10px"></span>
+                                            <input type="radio" name="Payment" value="true" /> Chuyển khoản
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="4">
+                                            <hr style="border: 1px solid #ccc;" />
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-3" style="border-radius: 10px; border: 2px solid #ccc; padding: 10px; ">
+                            <h4>
+                                Nhà cung cấp
+                                <a href="#" id="addSupplierBtn" style="float:right; font-size : 0.8em;@(isAdmin || (credentials != null && credentials.Contains("ADD_SUPPLIER")) ? "" : "pointer-events: none;")">
+                                    + Thêm nhà cung cấp
+                                </a>
+                            </h4>
+                            <form id="searchSupplierForm" action="@Url.Action("SearchSupplier", "Receipt")" method="post">
+                                <input type="hidden" name="SearchProduct" value="@Model.SearchProduct" />
+                                <div class="input-group">
+                                    <input type="text" class="form-control" name="SearchSupplier" value="@Model.SearchSupplier" placeholder="Nhập số điện thoại nhà cung cấp">
+                                    <div class="input-group-btn">
+                                        <button class="btn btn-primary" id="showSupplier">
+                                            <i class="fa fa-search"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                            <br />
+                            <div id="supplierInfo">
+                                @if (Model.Supplier != null)
+                                {
+                                    @Html.Partial("_SupplierInfo", Model.Supplier)
+                                }
+
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addsuppliermodal" tabindex="-1" role="dialog" aria-labelledby="addsuppliermodallabel" aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title text-center" id="addsuppliermodallabel">Thêm Nhà Cung Cấp Mới</h3>
+                <button type="button" class="close" data-dismiss="modal" aria-label="close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+
+                <form id="newSupplierForm">
+                    <div class="form-group">
+                        <label for="newsuppliername">Tên nhà cung cấp:</label>
+                        <input type="text" id="newsuppliername" name="Name" class="form-control mb-3" placeholder="Tên nhà cung cấp" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="newsupplieremail">Địa chỉ email:</label>
+                        <input type="email" id="newsupplieremail" name="Email" class="form-control mb-3" placeholder="Địa chỉ email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="newsupplierphone">Số điện thoại:</label>
+                        <input type="tel" id="newsupplierphone" name="Phone" class="form-control mb-3" placeholder="Số điện thoại" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="newsupplieraddress">Địa chỉ:</label>
+                        <input type="text" id="newsupplieraddress" name="Address" class="form-control" placeholder="Địa chỉ" required>
+                    </div>
+
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary" onclick="validateAndSave()">Lưu</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addproductmodal" tabindex="-1" role="dialog" aria-labelledby="addproductmodallabel" aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title text-center" id="addproductmodallabel">Thêm Sản Phẩm Mới</h3>
+                <button type="button" class="close" data-dismiss="modal" aria-label="close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+
+                <form id="newProductForm" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="newproductname">Tên sản phẩm:</label>
+                        <input type="text" id="newproductname" name="Name" class="form-control mb-3" placeholder="Tên sản phẩm" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="newproductmartial">Chất liệu:</label>
+                        <input type="text" id="newproductmarterial" name="Material" class="form-control mb-3" placeholder="Chất liệu" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="newproductcolor">Màu sắc:</label>
+                        <input type="tel" id="newproductcolor" name="Color" class="form-control mb-3" placeholder="Màu sắc" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="newproductcate">Loại sản phẩm:</label>
+                        <select id="newproductcate" class="form-control" name="CategoryID">
+
+                            @foreach (var cate in db.ProductCategories.ToList())
+                            {
+                                <option value="@cate.ID">@cate.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="newproductprice">Giá bán:</label>
+                        <input type="number" id="newproductprice" name="Price" class="form-control" placeholder="Giá bán" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="newproductimage">Ảnh sản phẩm:</label>
+                        <input type="file" name="fileImage" id="newproductimage" class="form-control" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary" onclick="validateAndSavePro()">Lưu</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        $('#searchProductForm').submit(function (e) {
+            e.preventDefault();
+
+            var formData = $(this).serialize();
+
+            $.ajax({
+                url: $(this).attr('action'),
+                type: $(this).attr('method'),
+                data: formData,
+                success: function (response) {
+                    $('#productTableContainer').html(response);
+                    calculateTotalAmount();
+                    totalPrice();
+                }
+            });
+        });
+    });
+
+    $(document).ready(function () {
+        $('#searchSupplierForm').submit(function (e) {
+            e.preventDefault();
+
+            var formData = $(this).serialize();
+
+            $.ajax({
+                url: $(this).attr('action'),
+                type: $(this).attr('method'), 
+                data: formData,
+                success: function (response) {
+                    $('#supplierInfo').html(response);
+                }
+            });
+        });
+    });
+    $('#addSupplierBtn').click(function () {
+        $('#addsuppliermodal').modal('show');
+    });
+    $('#addProductBtn').click(function () {
+        $('#addproductmodal').modal('show');
+    });
+
+    function validateAndSavePro() {
+        var productName = $('#newproductname').val().trim();
+        var productMartial = $('#newproductmarterial').val().trim();
+        var productColor = $('#newproductcolor').val().trim();
+        var productPrice = $('#newproductprice').val().trim();
+        if (productName === '' || productMartial === '' || productColor === '' || productPrice ==='') {
+            alert('Vui lòng điền đầy đủ thông tin !!!');
+            return;
+        }
+        savenewproduct();
+    }
+    function savenewproduct() {
+        $.ajax({
+            type: 'POST',
+            url: '@Url.Action("SaveNewProduct", "Receipt")',
+            data: new FormData($('#newProductForm')[0]),
+            processData: false,
+            contentType: false,
+            success: function (response) {
+                if (response.success) {
+                    $('#productTableContainer').html(response.data);
+                    $('#addproductmodal').modal('hide');
+                    calculateTotalAmount();
+                    totalPrice();
+                }
+                else {
+                    alert(response.message);
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error(xhr.responseText);
+                alert('Đã xảy ra lỗi: ' + error);
+            }
+        });
+    }
+
+    function validateAndSave() {
+        var supplierName = $('#newsuppliername').val().trim();
+        var supplierEmail = $('#newsupplieremail').val().trim();
+        var supplierPhone = $('#newsupplierphone').val().trim();
+        var supplierAddress = $('#newsupplieraddress').val().trim();
+
+        if (supplierName === '' || supplierEmail === '' || supplierPhone === '' || supplierAddress === '') {
+            alert('Vui lòng điền đầy đủ thông tin !!!');
+            return;
+        }
+
+        savenewsupplier();
+    }
+
+    function savenewsupplier() {
+        var formData = $('#newSupplierForm').serialize();
+        $.ajax({
+            type: 'POST',
+            url: '@Url.Action("SaveNewSupplier", "Receipt")',
+            data: formData,
+            success: function (response) {
+                if (response.success) {
+                    $('#supplierInfo').html(response.data);
+                    $('#addsuppliermodal').modal('hide');
+                } else {
+                    alert(response.message);
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error(xhr.responseText);
+                alert('Đã xảy ra lỗi: ' + error);
+            }
+        });
+    }
+
+    $(document).ready(function () {
+        $('#saveReceiptButton').click(function () {
+            var receiptDetails = [];
+
+            $('.product-row').each(function () {
+                var productId = $(this).find('.product-id').val();
+                var quantity = $(this).find('.quantity').val();
+                var importPrice = $(this).find('.costPrice').val();
+                receiptDetails.push({
+                    ProductID: productId,
+                    Quantity: quantity,
+                    ImportPrice: importPrice
+                });
+            });
+            if (receiptDetails.length === 0 || !$('#supplierId').val() || !$('input[name="PaymentStatus"]:checked').val()
+                || ($('input[name="PaymentStatus"]:checked').val() ==="true" && !$('input[name="Payment"]:checked').val())) {
+                alert('Chưa đủ dữ liệu để lưu');
+                return;
+            }
+
+            $.ajax({
+                url: '@Url.Action("Create", "Receipt")',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    receiptViewModel: {
+                        Receipt: {
+                            Description: $('#receiptDescription').val().trim(),
+                            PaymentStatus: $('input[name="PaymentStatus"]:checked').val(),
+                            Payment: $('input[name="Payment"]:checked').val() || null,
+                        },
+                        Supplier: {
+                            ID: $('#supplierId').val(),
+                            Name: $('#supplierName').val(),
+                            Email: $('#supplierEmail').val(),
+                            Phone: $('#supplierPhone').val(),
+                            Address: $('#supplierAddress').val()
+                        },
+                        LstReceiptDetail: receiptDetails
+                    }
+                }),
+
+                success: function (response) {
+                    console.log(response);
+                    if (response.success) {
+                        alert('Lưu phiếu nhập thành công!');
+                        window.location.href = '@Url.Action("Index", "Receipt")';
+                    } else {
+                        alert('Lưu phiếu nhập thất bại: ' + response.message);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error(xhr.responseText);
+                    alert('Đã xảy ra lỗi: ' + error);
+                }
+            });
+        });
+    });
+    function showPaymentMethodForm(radio) {
+        var paymentMethodRow = document.getElementById("paymentMethodRow");
+        if (radio.value === "true") {
+            paymentMethodRow.style.display = "table-row";
+        } else {
+            paymentMethodRow.style.display = "none";
+            var paymentRadios = document.querySelectorAll('input[name="Payment"]');
+            paymentRadios.forEach(function (radio) {
+                radio.checked = false;
+            });
+
+        }
+    }
+    function calculateTotalAmount() {
+        var totalAmount = 0;
+        $('#productTableContainer tbody tr').each(function () {
+            var quantity = parseInt($(this).find('.quantity').val()) || 0;
+            totalAmount += quantity;
+        });
+        $('#totalAmount').text(totalAmount);
+    }
+
+    function totalPrice() {
+        var total = 0;
+        $('#productTableContainer tbody tr').each(function () {
+            var priceText = $(this).find('.totalPrice').text().replace(/[^0-9.-]+/g, "");
+            var price = parseFloat(priceText) || 0;
+            total += price;
+        });
+        $('#totalPrice').text(total.toLocaleString('vi-VN') + ' đ');
+    }
+
+    $(document).on('change', '.quantity', function () {
+        calculateTotalAmount();
+        totalPrice();
+    });
+
+    $(document).on('click', '.delete-product-btn', function () {
+        calculateTotalAmount();
+        totalPrice();
+    });
+
+    $(document).on('change', '.costPrice', function () {
+        totalPrice();
+    });
+</script>
+
+
+
+
+
+
+
+
+

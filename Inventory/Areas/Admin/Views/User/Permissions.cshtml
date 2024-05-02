@@ -1,0 +1,213 @@
+﻿@model Model.ViewModels.AllPermission
+@{
+    ViewBag.Title = "Permissions";
+    Layout = "~/Areas/Admin/Views/Shared/_Layouts.cshtml";
+}
+@section header{
+    Phân quyền
+}
+@using (Html.BeginForm("Permissions", "User", FormMethod.Post))
+{
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <h4>Phân quyền cho tài khoản: "@ViewBag.UserName"</h4>
+                        </div>
+                        <div class="col-lg-6 text-right">
+                            <button class="btn btn-success"><i class="bi bi-save"></i> Lưu</button>
+                            <a href="@Url.Action("Index", "User")" class="btn btn-info"><i class="fa fa-backward"></i> Quay lại</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-lg-12">
+
+                            @Html.AntiForgeryToken()
+                            <hr />
+                            @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+                            <div class="permission-group">
+                                <button type="button" class="btn btn-primary permission-group-toggle"></button>Quản lý Người dùng
+                                <div class="connector"></div>
+                                <div class="sub-permissions">
+                                    <div class="checkbox-row">
+                                        @if (Model.UserPermission != null)
+                                        {
+                                            foreach (var permission in Model.UserPermission)
+                                            {
+                                                <label>
+                                                    <input type="checkbox" name="IsChecked.@permission.ID" value="true" @(permission.IsChecked ? "checked" : "")>
+                                                    @permission.Name
+                                                </label>
+                                            }
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="permission-group">
+                                <button type="button" class="btn btn-primary permission-group-toggle"></button>Quản lý Sản phẩm
+                                <div class="connector"></div>
+                                <div class="sub-permissions">
+                                    <div class="checkbox-row">
+                                        @if (Model.ProductPermission != null)
+                                        {
+                                            foreach (var permission in Model.ProductPermission)
+                                            {
+                                                <label>
+                                                    <input type="checkbox" name="IsChecked.@permission.ID" value="true" @(permission.IsChecked ? "checked" : "")>
+                                                    @permission.Name
+                                                </label>
+                                            }
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="permission-group">
+                                <button type="button" class="btn btn-primary permission-group-toggle"></button>Quản lý Khách hàng
+                                <div class="connector"></div>
+                                <div class="sub-permissions">
+                                    <div class="checkbox-row">
+                                        @if (Model.CustomerPermission != null)
+                                        {
+                                            foreach (var permission in Model.CustomerPermission)
+                                            {
+                                                <label>
+                                                    <input type="checkbox" name="IsChecked.@permission.ID" value="true" @(permission.IsChecked ? "checked" : "")>
+                                                    @permission.Name
+                                                </label>
+                                            }
+                                        }
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="permission-group">
+                                <button type="button" class="btn btn-primary permission-group-toggle"></button>Quản lý Nhà cung cấp
+                                <div class="connector"></div>
+                                <div class="sub-permissions">
+                                    <div class="checkbox-row">
+                                        @if (Model.SupplierPermission != null)
+                                        {
+                                            foreach (var permission in Model.SupplierPermission)
+                                            {
+                                                <label>
+                                                    <input type="checkbox" name="IsChecked.@permission.ID" value="true" @(permission.IsChecked ? "checked" : "")>
+                                                    @permission.Name
+                                                </label>
+                                            }
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="permission-group">
+                                <button type="button" class="btn btn-primary permission-group-toggle"></button>Quản lý Loại sản phẩm
+                                <div class="connector"></div>
+                                <div class="sub-permissions">
+                                    <div class="checkbox-row">
+                                        @if (Model.CategoryPermission != null)
+                                        {
+                                            foreach (var permission in Model.CategoryPermission)
+                                            {
+                                                <label>
+                                                    <input type="checkbox" name="IsChecked.@permission.ID" value="true" @(permission.IsChecked ? "checked" : "")>
+                                                    @permission.Name
+                                                </label>
+                                            }
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="permission-group">
+                                <button type="button" class="btn btn-primary permission-group-toggle"></button>Quản lý Đơn hàng
+                                <div class="connector"></div>
+                                <div class="sub-permissions">
+                                    <div class="checkbox-row">
+                                        @if (Model.OrderPermission != null)
+                                        {
+                                            foreach (var permission in Model.OrderPermission)
+                                            {
+                                                <label>
+                                                    <input type="checkbox" name="IsChecked.@permission.ID" value="true" @(permission.IsChecked ? "checked" : "")>
+                                                    @permission.Name
+                                                </label>
+                                            }
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="permission-group">
+                                <button type="button" class="btn btn-primary permission-group-toggle"></button>Quản lý Phiếu nhập kho
+                                <div class="connector"></div>
+                                <div class="sub-permissions">
+                                    <div class="checkbox-row">
+                                        @if (Model.ReceiptPermission != null)
+                                        {
+                                            foreach (var permission in Model.ReceiptPermission)
+                                            {
+                                                <label>
+                                                    <input type="checkbox" name="IsChecked.@permission.ID" value="true" @(permission.IsChecked ? "checked" : "")>
+                                                    @permission.Name
+                                                </label>
+                                            }
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="permission-group">
+                                <button type="button" class="btn btn-primary permission-group-toggle"></button>Quản lý Nhân viên
+                                <div class="connector"></div>
+                                <div class="sub-permissions">
+                                    <div class="checkbox-row">
+                                        @if (Model.EmployeePermission != null)
+                                        {
+                                            foreach (var permission in Model.EmployeePermission)
+                                            {
+                                                <label>
+                                                    <input type="checkbox" name="IsChecked.@permission.ID" value="true" @(permission.IsChecked ? "checked" : "")>
+                                                    @permission.Name
+                                                </label>
+                                            }
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="permission-group">
+                                <button type="button" class="btn btn-primary permission-group-toggle"></button>Báo cáo Thống kê
+                                <div class="connector"></div>
+                                <div class="sub-permissions">
+                                    <div class="checkbox-row">
+                                        @if (Model.StatisticPermission != null)
+                                        {
+                                            foreach (var permission in Model.StatisticPermission)
+                                            {
+                                                <label>
+                                                    <input type="checkbox" name="IsChecked.@permission.ID" value="true" @(permission.IsChecked ? "checked" : "")>
+                                                    @permission.Name
+                                                </label>
+                                            }
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $(".permission-group-toggle").click(function () {
+            $(this).toggleClass("active");
+            $(this).siblings(".sub-permissions").slideToggle();
+        });
+    });
+</script>
+
+

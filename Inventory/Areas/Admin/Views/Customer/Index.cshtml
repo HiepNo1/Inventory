@@ -1,0 +1,91 @@
+﻿@model PagedList.IPagedList<Model.EF.Customer>
+@using PagedList.Mvc;
+@using Inventory.Common;
+@{
+    ViewBag.Title = "Quản lý Thông tin khách hàng";
+    Layout = "~/Areas/Admin/Views/Shared/_Layouts.cshtml";
+    var credentials = Session[CommonConstants.SESSION_CREDENTIALS] as List<string>;
+    var userLogin = (UserLogin)Session[CommonConstants.USER_SESSION];
+    bool isAdmin = (userLogin.GroupID == "ADMIN") ? true : false;
+}
+
+@section header{
+    Quản lý Thông tin khách hàng
+}
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <div class="row">
+                    <div class="col-lg-6">
+                        <form>
+                            <div class="input-group">
+                                <input type="text" class="form-control" name="searchString" value="@ViewBag.searchString" placeholder="Nhập tên khách hàng">
+                                <span class="input-group-btn">
+                                    <button class="btn btn-primary" type="submit">
+                                        <i class="fa fa-search"></i>
+                                    </button>
+                                </span>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="col-lg-6 text-right">
+                        <a href="~/Admin/Customer/Create" @(isAdmin || (credentials != null && credentials.Contains("ADD_CUSTOMER")) ? "" : "disabled") class="btn btn-success"><i class="bi bi-plus"></i> Thêm mới</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th>Tên khách hàng</th>
+                                <th>SĐT</th>
+                                <th>Email</th>
+                                <th>Địa chỉ</th>
+                                <th>Giới tính</th>
+                                <th></th>
+
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td>@item.Name</td>
+                                    <td>@item.Phone</td>
+                                    <td>@item.Email</td>
+                                    <td>@item.Address</td>
+                                    @{
+                                        if (item.Gender == 0)
+                                        {
+                                            <td>Nữ</td>
+                                        }
+                                        if (item.Gender == 1)
+                                        {
+                                            <td>Nam</td>
+                                        }
+                                        if (item.Gender == 2)
+                                        {
+                                            <td>Không xác định</td>
+                                        }
+                                    }
+                                    <td>        
+                                        <a href="~/Admin/Customer/Edit/@item.ID" @(isAdmin || (credentials != null && credentials.Contains("EDIT_CUSTOMER")) ? "" : "disabled") class="btn btn-primary"> <i class="bi bi-pencil"></i></a>
+                                        <a href="~/Admin/Customer/Delete/@item.ID" @(isAdmin || (credentials != null && credentials.Contains("DELETE_CUSTOMER")) ? "" : "disabled") class="btn btn-danger" onclick="return confirm('Bạn có muốn xóa thông tin khách hàng này ?');"><i class="bi bi-trash"></i></a>
+                                    </td>
+                                </tr>
+                            }
+
+                        </tbody>
+                    </table>
+                    @Html.PagedListPager(Model, page => Url.Action("Index", new { page, @searchString = ViewBag.searchString }))
+                </div>
+                <!-- /.table-responsive -->
+            </div>
+        </div>
+    </div>
+</div>
+

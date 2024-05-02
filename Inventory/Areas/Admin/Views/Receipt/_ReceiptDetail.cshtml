@@ -1,0 +1,104 @@
+﻿@model Model.ViewModels.CreateReceiptViewModel
+@Html.Partial("MessagePartial")
+@if (Model.Products != null && Model.Products.Count > 0)
+{
+    <table class="table table-hover table-bordered">
+        <thead>
+            <tr>
+                <th>Mã sản phẩm </th>
+                <th style="width:45%; text-align:center">Sản phẩm</th>
+                <th>Giá nhập</th>
+                <th>Số lượng</th>
+                <th>Tổng tiền</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var product in Model.Products)
+            {
+                decimal money = product.Price * (1 - (decimal)(0.01 * product.Sale));
+                <tr id="product_@product.ID" class="product-row">
+                    <td style="vertical-align: middle; text-align: center">@product.Code</td>
+                    <td style="vertical-align: middle;">
+                        <table>
+                            <tr>
+                                <td><img src="@product.Image" alt="@product.Name" style="max-width: 100px;" /></td>
+                                <td>
+                                    @product.Name <br />
+                                    <span>Chất liệu : @product.Material</span> <br />                                  
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                    <td style="vertical-align: middle;">
+                        <input type="number" id="costPrice_@product.ID" style="width: 120px;" class="costPrice form-control" name="costPrice_@product.ID" value="" placeholder="vnđ" min="0" onchange="calculateTotalPrice(@product.ID)" />
+                    </td>
+
+                    <td style="vertical-align: middle;">
+                        <input type="hidden" class="product-id" value="@product.ID" />
+                        <input type="number" id="quantity_@product.ID" style="width: 80px;" class="quantity form-control" name="quantity_@product.ID" value="1" min="1" onchange="calculateTotalPrice(@product.ID)" />
+                    </td>
+                    <td style="vertical-align: middle;" class="totalPrice" id="totalPrice_@product.ID">
+                        0 đ
+                    </td>
+                    <td style="vertical-align: middle;">
+                        <button class="delete-product-btn" style="background-color: transparent; border: none; padding: 0;" onclick="deleteProduct(@product.ID)">
+                            <i class="bi bi-x" style="font-size: 1.8em;"></i>
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <table class="table table-hover table-bordered">
+        <thead>
+            <tr>
+                <th>Mã sản phẩm </th>
+                <th style="width:50%; text-align:center">Sản phẩm</th>
+                <th>Giá bán</th>
+                <th>Số lượng</th>
+                <th>Tổng tiền</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td colspan="5" class="text-center">
+                    Chưa có sản phẩm nào
+                </td>
+            </tr>
+
+        </tbody>
+    </table>
+}
+
+<script>
+    function deleteProduct(productId) {
+        var row = document.getElementById("product_" + productId);
+        if (row) {
+            row.remove();
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("DeleteProduct", "Receipt")',
+                data: { productId: productId },
+                success: function (response) {
+                    console.log("Product removed from session successfully");
+                },
+                error: function (xhr, status, error) {
+                    console.error(xhr.responseText);
+                    alert('Đã xảy ra lỗi: ' + error);
+                }
+            });
+        }
+    };
+
+    function calculateTotalPrice(productId) {
+        var quantity = parseInt(document.getElementById("quantity_" + productId).value);
+        var costPrice = parseFloat(document.getElementById("costPrice_" + productId).value);
+        var totalPrice = quantity * costPrice;
+        var formattedTotalPrice = totalPrice.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " đ";
+        document.getElementById("totalPrice_" + productId).innerText = formattedTotalPrice;
+    };
+</script>

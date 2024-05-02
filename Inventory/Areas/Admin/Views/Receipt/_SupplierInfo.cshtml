@@ -1,0 +1,19 @@
+﻿@model Model.EF.Supplier
+@Html.Partial("MessagePartial")
+@if (Model != null)
+{
+
+    <input type="hidden" id="supplierId" value="@Model.ID" />
+    <input type="hidden" id="supplierName" value="@Model.Name" />
+    <input type="hidden" id="supplierEmail" value="@Model.Email" />
+    <input type="hidden" id="supplierPhone" value="@Model.Phone" />
+    <input type="hidden" id="supplierAddress" value="@Model.Address" />
+    <b>Thông Tin Nhà Cung Cấp</b>
+    <h5><b>Tên nhà cung cấp : </b> @Model.Name</h5>
+    <h5><b>Email : </b> @Model.Email</h5>
+
+    <h5><b>Số điện thoại : </b> @Model.Phone</h5>
+
+    <h5><b>Địa chỉ : </b> @Model.Address</h5>
+}
+

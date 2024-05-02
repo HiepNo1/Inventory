@@ -1,0 +1,427 @@
+﻿@model Model.ViewModels.CreateOrderViewModel
+@using Inventory.Common;
+@{
+    ViewBag.Title = "Thêm đơn hàng";
+    Layout = "~/Areas/Admin/Views/Shared/_Layouts.cshtml";
+    Model.EF.InventoryDbContext db = new Model.EF.InventoryDbContext();
+    var credentials = Session[CommonConstants.SESSION_CREDENTIALS] as List<string>;
+    var userLogin = (UserLogin)Session[CommonConstants.USER_SESSION];
+    bool isAdmin = (userLogin.GroupID == "ADMIN") ? true : false;
+}
+
+@section header{
+    Thêm đơn hàng
+}
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <div class="row">
+                    <div class="col-lg-6">
+                        <h4>Nhập thông tin đơn hàng</h4>
+                    </div>
+                    <div class="col-lg-6 text-right">
+                        <button class="btn btn-success" id="saveOrderButton"><i class="bi bi-save"></i> Lưu[Thêm]</button>
+                        <a href="@Url.Action("Index", "Order")" class="btn btn-info"><i class="fa fa-backward"></i> Quay lại</a>
+                    </div>
+                </div>
+            </div>
+            <div class="panel-body">
+                <div class="row">
+                    <div class="col-lg-12">
+                        @Html.AntiForgeryToken()
+                        <hr />
+                        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+                        <div class="col-lg-9">
+                            <div style="border-radius: 10px; border: 2px solid #ccc; margin:0 -10px; padding: 10px;">
+                                <h4>Chi tiết đơn hàng</h4>
+                                <form id="searchProductForm" action="@Url.Action("SearchProduct", "Order")" method="post">
+                                    <input type="hidden" name="SearchCustomer" value="@Model.SearchCustomer" />
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" name="SearchProduct" value="@Model.SearchProduct" placeholder="Nhập tên hoặc mã của sản phẩm">
+                                        <span class="input-group-btn">
+                                            <button class="btn btn-primary" type="submit">
+                                                <i class="fa fa-search"></i>
+                                            </button>
+                                        </span>
+                                    </div>
+                                </form>
+                                <br />
+                                <div id="productTableContainer">
+                                    @Html.Partial("_OrderDetail", Model.Products)
+                                </div>
+                            </div>
+
+                            <div style="border-radius: 10px; border: 2px solid #ccc; margin: 10px -10px; padding: 10px;">
+                                <table style="width: 100%;">
+                                    <tr>
+                                        <td style="width: 60%;">
+                                            <h5><b>Ghi chú</b></h5>
+                                            <textarea id="orderDescription" placeholder="Nhập ghi chú cho đơn hàng" style="width: 90%; border: none; box-shadow: 0 0 3px rgba(0, 0, 0, 0.3); height: 70px; padding: 5px;"></textarea>
+                                        </td>
+                                        <td style="width: 20%;">
+                                            <h5>Tổng</h5>
+                                            <h5>Thành tiền</h5>
+                                            <h5><a href="#" id="addShippingFeeBtn">Phí vận chuyển</a></h5>
+                                            <h5>Tổng số</h5>
+                                        </td>
+                                        <td style="width:20%; text-align : right;">
+                                            <h5 id="totalAmount">0</h5>
+                                            <h5 id="totalPrice">0 đ</h5>
+                                            <h5 id="shippingFee">0 đ</h5>
+                                            <h5 id="totalMoney">0 đ</h5>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="4"><h2></h2></td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2">
+                                            <h5><b>Giao hàng</b></h5>
+                                        </td>
+                                        <td colspan="2" style="text-align:right;">
+                                            <input type="radio" name="ShippingStatus"/> Giao hàng sau
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="4">
+                                            <hr style="border: 1px solid #ccc;" />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="1">
+                                            <h5><b>Hình thức Thanh toán</b></h5>
+                                        </td>
+                                        <td colspan="3" style="text-align:right;">
+                                            <input type="radio" name="PaymentStatus" value="false" /> Chưa thanh toán
+                                            <span style="margin:10px"></span>
+                                            <input type="radio" name="PaymentStatus" value="true" /> Đã thanh toán
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="4">
+                                            <hr style="border: 1px solid #ccc;" />
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-3" style="border-radius: 10px; border: 2px solid #ccc; padding: 10px;">
+                            <h4>
+                                Khách hàng
+                                <a href="#" id="addCustomerBtn" style="float:right; font-size : 0.8em;@(isAdmin || (credentials != null && credentials.Contains("ADD_CUSTOMER")) ? "" : "pointer-events: none;")">
+                                    Thêm khách hàng
+                                </a>
+                            </h4>
+                            <form id="searchCustomerForm" action="@Url.Action("SearchCustomer", "Order")" method="post">
+                                <input type="hidden" name="SearchProduct" value="@Model.SearchProduct" />
+                                <div class="input-group">
+                                    <input type="text" class="form-control" name="SearchCustomer" value="@Model.SearchCustomer" placeholder="Nhập số điện thoại khách hàng">
+                                    <div class="input-group-btn">
+                                        <button class="btn btn-primary" id="showCustomer">
+                                            <i class="fa fa-search"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                            <br />
+                            <div id="customerInfo">
+                                @if (Model.Customer != null)
+                                {
+                                    @Html.Partial("_CustomerInfo", Model.Customer)
+                                }
+
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="shippingFeeModal" tabindex="-1" role="dialog" aria-labelledby="shippingFeeModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="shippingFeeModalLabel">Nhập phí vận chuyển</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="shippingFeeInput">Số tiền phí vận chuyển (đ)</label>
+                    <input type="number" class="form-control" id="shippingFeeInput" placeholder="Nhập số tiền phí vận chuyển">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary" id="saveShippingFeeBtn">Lưu</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addcustomermodal" tabindex="-1" role="dialog" aria-labelledby="addcustomermodallabel" aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title text-center" id="addcustomermodallabel">Thêm Khách Hàng Mới</h3>
+                <button type="button" class="close" data-dismiss="modal" aria-label="close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+
+                <form id="newCustomerForm">
+                    <div class="form-group">
+                        <label for="newcustomername">Tên khách hàng:</label>
+                        <input type="text" id="newcustomername" name="Name" class="form-control mb-3" placeholder="Tên khách hàng" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="newcustomeremail">Địa chỉ email:</label>
+                        <input type="email" id="newcustomeremail" name="Email" class="form-control mb-3" placeholder="Địa chỉ email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="newcustomerphone">Số điện thoại:</label>
+                        <input type="tel" id="newcustomerphone" name="Phone" class="form-control mb-3" placeholder="Số điện thoại" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="newcustomeraddress">Địa chỉ:</label>
+                        <input type="text" id="newcustomeraddress" name="Address" class="form-control" placeholder="Địa chỉ" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Giới tính:</label>
+                        <div>
+                            <input type="radio" id="female" name="Gender" value="0" required>
+                            <span for="female">Nữ</span>
+                            <span style="margin-right: 10px;"></span>
+                            <input type="radio" id="male" name="Gender" value="1" required>
+                            <span for="male">Nam</span>
+                            <span style="margin-right: 10px;"></span>
+                            <input type="radio" id="other" name="Gender" value="2" required>
+                            <span for="other">Không xác định</span>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary" onclick="validateAndSave()">Lưu</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    document.getElementById("showCustomer").onclick = function () {
+        document.getElementById("customerInfo").style.display = 'block';
+    };
+
+    $(document).ready(function () {
+        $('#searchProductForm').submit(function (e) {
+            e.preventDefault(); 
+            var formData = $(this).serialize();
+            $.ajax({
+                url: $(this).attr('action'), 
+                type: $(this).attr('method'),
+                data: formData,
+                success: function (response) {
+                    $('#productTableContainer').html(response);
+                    calculateTotalAmount();
+                    totalPrice();
+                    totalMoney();
+                }
+            });
+        });
+    });
+
+    $(document).ready(function () {
+        $('#searchCustomerForm').submit(function (e) {
+            e.preventDefault();
+            var formData = $(this).serialize();
+
+            $.ajax({
+                url: $(this).attr('action'),
+                type: $(this).attr('method'),
+                data: formData, 
+                success: function (response) {
+                    $('#customerInfo').html(response);
+                }
+            });
+        });
+        $('#addCustomerBtn').click(function () {
+            $('#addcustomermodal').modal('show'); 
+        });
+    });
+
+    function validateAndSave() {
+        var customerName = $('#newcustomername').val().trim();
+        var customerEmail = $('#newcustomeremail').val().trim();
+        var customerPhone = $('#newcustomerphone').val().trim();
+        var customerAddress = $('#newcustomeraddress').val().trim();
+        var gender = $('input[name="Gender"]:checked').val();
+
+        if (customerName === '' || customerEmail === '' || customerPhone === '' || customerAddress === '' || gender === undefined) {
+            alert('Vui lòng điền đầy đủ thông tin !!!');
+            return;
+        }
+
+        savenewcustomer();
+    }
+
+    function savenewcustomer() {
+        var formData = $('#newCustomerForm').serialize();
+        $.ajax({
+            type: 'POST',
+            url: '@Url.Action("SaveNewCustomer", "Order")',
+            data: formData,
+            success: function (response) {
+                if (response.success) {
+                    $('#customerInfo').html(response.data);
+                    $('#addcustomermodal').modal('hide');
+                } else {
+                    alert(response.message);
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error(xhr.responseText);
+                alert('Đã xảy ra lỗi: ' + error);
+            }
+        });
+    }
+
+    $(document).ready(function () {
+        $('#saveOrderButton').click(function () {
+            var orderDetails = [];
+          
+            $('.product-row').each(function () {
+                var productId = $(this).find('.product-id').val();
+                var quantity = $(this).find('.quantity').val();
+                orderDetails.push({
+                    ProductID: productId,
+                    Quantity: quantity
+                });
+            });
+           
+            if (orderDetails.length === 0 || !$('#customerId').val() || $('input[name="PaymentStatus"]:checked').val() == undefined) {
+                alert('Chưa đủ dữ liệu để lưu');
+                return;
+            }
+            var shippingFeeText = $('#shippingFee').text().trim();
+            var shippingFeeValue = parseFloat(shippingFeeText.replace(/[^\d.]/g, ''));
+            if (shippingFeeText.includes(".")) {
+                shippingFeeValue *= 1000;
+            }
+            $.ajax({
+                url: '@Url.Action("Create", "Order")',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    orderViewModel: {
+                        Order: {
+                            Description: $('#orderDescription').val().trim(),
+                            ShippingFee: shippingFeeValue,
+                            ShippingStatus: $('input[name="ShippingStatus"]').prop('checked'),
+                            PaymentStatus: $('input[name="PaymentStatus"]:checked').val()
+                        },
+                        Customer: {
+                            ID: $('#customerId').val(),
+                            Name: $('#customerName').val(),
+                            Email: $('#customerEmail').val(),
+                            Phone: $('#customerPhone').val(),
+                            Address: $('#customerAddress').val()
+                        },
+                        LstOrderDetail: orderDetails,                      
+                    }
+                }),
+
+                success: function (response) {
+                    console.log(response);
+                    if (response.success) {
+                        alert('Lưu đơn hàng thành công!');
+                        window.location.href = '@Url.Action("Index", "Order")';
+                    } else {
+                        alert('Lưu đơn hàng thất bại: ' + response.message);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error(xhr.responseText);
+                    alert('Đã xảy ra lỗi: ' + error);
+                }
+            });
+        });
+    });
+
+    function selectCustomer(customerId) {
+        $('#customerId').val(customerId);
+    }
+
+    $(document).ready(function () {
+        $('#addShippingFeeBtn').click(function () {
+            $('#shippingFeeModal').modal('show');
+        });
+
+        $('#saveShippingFeeBtn').click(function () {
+            var shippingFee = parseInt($('#shippingFeeInput').val());
+
+            if (!isNaN(shippingFee)) {
+                $('#shippingFee').text(shippingFee.toLocaleString('vi-VN') + ' đ');
+                $('#shippingFeeModal').modal('hide');
+                totalMoney();
+            } else {
+                alert('Vui lòng nhập số tiền phí vận chuyển');
+            }
+        });
+    });
+
+    function calculateTotalAmount() {
+        var totalAmount = 0;
+        $('#productTableContainer tbody tr').each(function () {
+            var quantity = parseInt($(this).find('.quantity').val()) || 0;
+            totalAmount += quantity;
+        });
+        $('#totalAmount').text(totalAmount);
+    }
+
+    function totalPrice() {
+        var total = 0;
+        $('#productTableContainer tbody tr').each(function () {
+            var priceText = $(this).find('.totalPrice').text().replace(/[^0-9.-]+/g, ""); 
+            var price = parseFloat(priceText) || 0;
+            total += price;
+        });
+        $('#totalPrice').text(total.toLocaleString('vi-VN') + ' đ');
+    }
+
+    function totalMoney() {
+        var totalPrice = parseFloat(document.getElementById("totalPrice").innerText.replace(/[^\d]+/g, ""));
+        var shippingFee = parseFloat(document.getElementById("shippingFee").innerText.replace(/[^\d]+/g, ""));
+        var totalMoney = totalPrice + shippingFee;
+
+        var formattedTotalMoney = totalMoney.toLocaleString('vi-VN') + ' đ';
+        document.getElementById("totalMoney").innerText = formattedTotalMoney;
+    }
+    $(document).on('change', '.quantity', function () {
+        calculateTotalAmount();
+        totalPrice();
+        totalMoney();
+    });
+
+    $(document).on('click', '.delete-product-btn', function () {
+        calculateTotalAmount();
+        totalPrice();
+        totalMoney();
+    });
+</script>
+
+
+
+
+
+
+
+

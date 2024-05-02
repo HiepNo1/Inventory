@@ -1,0 +1,28 @@
+﻿@using Inventory.Common;
+@if (TempData.ContainsKey("message"))
+{
+    XMessage message = (XMessage)TempData["message"];
+
+    <div id="alertMessage" class="alert alert-@message.TypeMsg">
+        @if (message.TypeMsg == "danger")
+        {
+            <i class="bi bi-x-circle"></i> @message.Msg
+        }
+        @if (message.TypeMsg == "success")
+        {
+            <i class="bi bi-check-circle"></i> @message.Msg
+        }
+
+    </div>
+    <script type="text/javascript">
+        // Add script to hide the message after 3 seconds
+        setTimeout(function () {
+            var alertMessage = document.getElementById('alertMessage');
+            if (alertMessage) {
+                alertMessage.style.display = 'none';
+            }
+        }, 3000); // 3000 milliseconds = 3 seconds
+    </script>
+}
+
+

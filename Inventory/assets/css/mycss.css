@@ -1,0 +1,84 @@
+﻿
+.dropdown-menu a.dropdown-item {
+    display: block;
+    padding: 0.5rem 1.5rem;
+    clear: both;
+    font-weight: 400;
+    color: #212529;
+    text-align: inherit;
+    white-space: nowrap;
+    background-color: transparent;
+    border: 0;
+    transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out;
+    width: auto;
+}
+
+.dropdown-menu a.dropdown-item:hover,
+.dropdown-menu a.dropdown-item:focus {
+    color: #1e90ff;
+    text-decoration: none;
+    background-color: #f8f9fa;
+}
+
+
+.permission-group {
+    margin-bottom: 20px;
+    padding-left: 20px;
+    border-left: 2px solid #ccc;
+    position: relative;
+}
+
+.permission-group label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.sub-permissions {
+    display: none;
+    margin-left: 20px;
+    position: relative;
+}
+
+.connector {
+    position: absolute;
+    background-color: #ccc;
+    width: 2px;
+    height: calc(100% - 20px);
+    top: 10px;
+    left: 0;
+    transform: translateX(-50%);
+}
+
+.permission-group-toggle {
+    position: relative;
+    z-index: 2;
+    cursor: pointer;
+    background: none;
+    border: none;
+}
+
+    .permission-group-toggle:before {
+        content: '+';
+        position: absolute;
+        top: 50%;
+        left: -15px;
+        transform: translateY(-50%);
+        font-size: 20px;
+        color: #fff;
+        background-color: #007bff;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        line-height: 30px;
+        text-align: center;
+    }
+
+.checkbox-row {
+    display: flex;
+}
+
+    .checkbox-row label {
+        margin-right: 20px;
+    }
+

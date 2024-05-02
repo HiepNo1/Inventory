@@ -1,0 +1,30 @@
+﻿@model Model.EF.Customer
+@Html.Partial("MessagePartial")
+@if (Model != null)
+{
+    <input type="hidden" id="customerId" value="@Model.ID" />
+    <input type="hidden" id="customerName" value="@Model.Name" />
+    <input type="hidden" id="customerEmail" value="@Model.Email" />
+    <input type="hidden" id="customerPhone" value="@Model.Phone" />
+    <input type="hidden" id="customerAddress" value="@Model.Address" />
+    <b>Thông Tin Người Mua</b>
+    <h5>
+        @Model.Name &emsp; Giới tính :
+        @{
+            if (Model.Gender == 0)
+            {<text>Nữ</text> }
+        else if (Model.Gender == 1)
+        {<text>Nam</text> }
+    else if (Model.Gender == 2)
+    {<text>Không xác định</text> }
+        }
+    </h5>
+    <h5>@Model.Email</h5>
+    <hr />
+    <b>Thông Tin Giao Hàng</b>
+    <h5>@Model.Name</h5>
+    <h5>@Model.Phone</h5>
+    <hr />
+    <b>Địa chỉ giao hàng</b>
+    <h5>@Model.Address</h5>
+}

@@ -1,0 +1,206 @@
+﻿@model PagedList.IPagedList<Model.EF.Employee>
+@using PagedList.Mvc;
+@using Inventory.Common;
+@using Model.EF;
+@{
+    ViewBag.Title = "Quản lý Nhân viên";
+    Layout = "~/Areas/Admin/Views/Shared/_Layouts.cshtml";
+    var credentials = Session[CommonConstants.SESSION_CREDENTIALS] as List<string>;
+    var userLogin = (UserLogin)Session[CommonConstants.USER_SESSION];
+    bool isAdmin = (userLogin.GroupID == "ADMIN") ? true : false;
+}
+
+@section header{
+    Quản lý Nhân viên
+}
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <div class="row">
+                    <div class="col-lg-6">
+                        <form>
+                            <div class="input-group">
+                                <input type="text" class="form-control" name="searchString" value="@ViewBag.searchString" placeholder="Nhập tên nhân viên hoặc số điện thoại">
+                                <span class="input-group-btn">
+                                    <button class="btn btn-primary" type="submit">
+                                        <i class="fa fa-search"></i>
+                                    </button>
+                                </span>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="col-lg-6 text-right">
+                        <a href="~/Admin/Employee/Create" @(isAdmin || (credentials != null && credentials.Contains("ADD_EMPLOYEE")) ? "" : "disabled") class="btn btn-success"><i class="bi bi-plus"></i> Thêm mới</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th>Tên nhân viên</th>
+                                <th>SĐT</th>
+                                <th>Email</th>
+                                <th>Địa chỉ</th>
+                                <th>Giới tính</th>
+                                <th>Ngày vào làm</th>
+                                <th>Tài khoản</th>
+                                <th>Chức năng</th>
+
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td>@item.Name</td>
+                                    <td>@item.Phone</td>
+                                    <td>@item.Email</td>
+                                    <td>@item.Address</td>
+
+                                    @{
+                                        if (item.Gender == 0)
+                                        {
+                                            <td>Nữ</td>
+                                        }
+                                        if (item.Gender == 1)
+                                        {
+                                            <td>Nam</td>
+                                        }
+                                        if (item.Gender == 2)
+                                        {
+                                            <td>Không xác định</td>
+                                        }
+                                    }
+                                    <td>@item.StartDate.ToString("dd-MM-yyyy")</td>
+                                    <td>
+                                        @{if (item.UserID != null)
+                                            {
+                                                var user = new InventoryDbContext().Users.Find(item.UserID);
+                                                <text>@user.UserName</text>
+                                            }
+                                            else
+                                            {
+                                                <a class="btn btn-success" id="addUserBtn" data-name="@item.Name" data-phone="@item.Phone">Thêm tài khoản</a>
+                                            }
+                                        }
+                                    </td>
+                                    <td>
+                                        <a href="~/Admin/Employee/Edit/@item.ID" @(isAdmin || (credentials != null && credentials.Contains("EDIT_EMPLOYEE")) ? "" : "disabled") class="btn btn-primary"> <i class="bi bi-pencil"></i></a>
+                                        <a href="~/Admin/Employee/Delete/@item.ID" @(isAdmin || (credentials != null && credentials.Contains("DELETE_EMPLOYEE")) ? "" : "disabled") class="btn btn-danger" onclick="return confirm('Bạn có muốn xóa thông tin khách hàng này ?');"><i class="bi bi-trash"></i></a>
+                                    </td>
+                                </tr>
+                            }
+
+                        </tbody>
+                    </table>
+                    @Html.PagedListPager(Model, page => Url.Action("Index", new { page, @searchString = ViewBag.searchString }))
+                </div>
+                <!-- /.table-responsive -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addusermodal" tabindex="-1" role="dialog" aria-labelledby="addusermodallabel" aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title text-center" id="addusermodallabel">Thêm Tài Khoản Mới</h3>
+                <button type="button" class="close" data-dismiss="modal" aria-label="close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+
+                <form id="newUserForm" action="@Url.Action("SaveUser", "Employee")" method="post">
+                    <div class="form-group">
+                        <label for="newusername">Tài khoản:</label>
+                        <input type="text" id="newusername" name="UserName" class="form-control mb-3" placeholder="Tên đăng nhập" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="newuserpassword">Mật khẩu:</label>
+                        <input type="password" id="newuserpassword" name="Password" class="form-control mb-3" placeholder="Mật khẩu" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="newusergroup">Nhóm người dùng:</label>
+                        <select id="newusergroup"  class="form-control" name="GroupID">
+                            @{
+                                var groups = new InventoryDbContext().UserGroups.Where(x => x.ID != "ADMIN").ToList();
+                                foreach (var item in groups)
+                                {
+                                    <option value="@item.ID">@item.Name</option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary" id="saveUserBtn">Lưu</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+
+<script>
+    $(document).ready(function () {
+        $(document).on("click", "#addUserBtn", function () {
+            var name = $(this).data('name');
+            var phone = $(this).data('phone');
+            $('#newUserForm').data('name', name);
+            $('#newUserForm').data('phone', phone);
+            $('#addusermodal').modal('show');
+        });
+
+        $(document).on("click", "#saveUserBtn", function () {
+            validateAndSave();
+        });
+    });
+
+    function validateAndSave() {
+        var username = $('#newusername').val().trim();
+        var password = $('#newuserpassword').val().trim();
+        var groupId = $('#newusergroup').val();
+        var name = $('#newUserForm').data('name');
+        var phone = $('#newUserForm').data('phone');
+
+        if (username ==='' || password ==='') {
+            alert("Chưa nhập đủ dữ liệu");
+            return;
+        }
+
+        $.ajax({
+            url: '@Url.Action("SaveUser", "Employee")',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                UserName: username,
+                Password: password,
+                GroupID: groupId,
+                Name: name,
+                Phone: phone
+            },
+            success: function (data) {
+                $('#addusermodal').modal('hide');
+                if (data.success) {
+                    alert(data.message);
+                    window.location.href = '@Url.Action("Index", "Employee")';
+                } else {
+                    alert(data.message);
+                }
+            },
+            error: function (xhr, textStatus, errorThrown) {
+                alert("Đã xảy ra lỗi khi lưu tài khoản");
+            }
+        });
+    }
+</script>

@@ -1,0 +1,159 @@
+﻿@model Model.ViewModels.OrderViewModel
+
+@{
+    ViewBag.Title = "Chi tiết đơn hàng hủy";
+    Layout = "~/Areas/Admin/Views/Shared/_Layouts.cshtml";
+}
+
+
+@section header{
+    Chi tiết đơn hàng hủy
+}
+<div class="row">
+    <div class="col-lg-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="col-lg-6">
+
+                        </div>
+                        <div class="col-lg-6 text-right">
+                            <a href="@Url.Action("Trash", "Order")" class="btn btn-info"><i class="fa fa-backward"></i> Quay lại</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="col-lg-5">
+                            <h4>Đơn hàng</h4>
+                            <table class="table table-hover">
+                                <tr>
+                                    <td>Số hóa đơn</td>
+                                    <td>@Model.Code</td>
+                                </tr>
+                                <tr>
+                                    <td>Ngày tạo</td>
+                                    <td>@Model.CreateDate</td>
+                                </tr>
+                                <tr>
+                                    <td>Trạng thái</td>
+                                    <td>
+                                        @{
+                                            if (Model.Status == 0)
+                                            {
+                                                <span>Đã hủy</span>
+                                            }
+                                            if (Model.Status == 1)
+                                            {
+                                                <span>Chờ xác nhận</span>
+                                            }
+                                            if (Model.Status == 2)
+                                            {
+                                                <span>Đã xác nhận</span>
+                                            }
+                                            if (Model.Status == 3)
+                                            {
+                                                <span>Đang vận chuyển</span>
+                                            }
+                                            if (Model.Status == 4)
+                                            {
+                                                <span>Hoàn thành</span>
+                                            }
+                                        }
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-lg-7">
+                            <h4>Thông tin khách hàng</h4>
+                            <table class="table table-striped table-hover">
+                                <tr>
+                                    <td>Tên khách hàng</td>
+                                    <td>@Model.CustomerName</td>
+                                </tr>
+                                <tr>
+                                    <td>SĐT</td>
+                                    <td>@Model.CustomerPhone</td>
+                                </tr>
+                                <tr>
+                                    <td>Email</td>
+                                    <td>@Model.CustomerEmail</td>
+                                </tr>
+                                <tr>
+                                    <td>Địa chỉ nhận</td>
+                                    <td>@Model.CustomerAddress</td>
+                                </tr>
+                                <tr>
+                                    <td>Giới tính</td>
+                                    <td>
+                                        @{
+                                            if (Model.Gender == 0)
+                                            {<text>Nữ</text>}
+                                        if (Model.Gender == 1)
+                                        {<text>Nam</text>}
+                                    if (Model.Gender == 2)
+                                    {<text>Không xác định</text>}
+                                        }
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="row">
+                    <div class="col-lg-12">
+                        <h4>Chi tiết đơn hàng</h4>
+                        <div class="table-responsive">
+                            <table class="table table-striped table-bordered table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Tên sản phẩm</th>
+                                        <th>Ảnh sản phẩm</th>
+                                        <th>Giá tiền</th>
+                                        <th>Giảm giá</th>
+                                        <th>Số lượng</th>
+                                        <th>Thành tiền</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @{ decimal totalMoney = 0;}
+                                    @foreach (var detail in ViewBag.lstOrderDetail)
+                                    {
+                                        decimal total = detail.ProductPrice * (decimal)(1 - 0.01 * detail.Sale) * detail.Quantity;
+                                        <tr>
+                                            <td>@detail.ProductName</td>
+                                            <td><img src="@detail.ProductImage" style="width:100px; height:100px" /> </td>
+                                            <td>@detail.ProductPrice.ToString("#,##0 đ")</td>
+                                            <td>@detail.Sale %</td>
+                                            <td>@detail.Quantity</td>
+                                            <td>@total.ToString("#,##0 đ")</td>
+                                        </tr>
+                                        totalMoney += total;
+                                    }
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <th colspan="4">
+                                            <a href="@Url.Action("Retrash", "Order", new { id = Model.ID })" class="btn btn-success"><i class="fa fa-rotate-left"></i> Khôi phục</a>
+                                            <a href="@Url.Action("Delete", "Order", new { id = Model.ID })" class="btn btn-danger" onclick="return confirm('Đơn hàng @Model.Code sẽ bị xóa vĩnh viễn ! Bạn chắc chắn muốn xóa ?');"><i class="bi bi-trash"></i> Xóa</a>
+                                        </th>
+                                        <th colspan="2">Tổng tiền : @totalMoney.ToString("#,##0 đ")</th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+
+                        </div>
+                        <!-- /.table-responsive -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
