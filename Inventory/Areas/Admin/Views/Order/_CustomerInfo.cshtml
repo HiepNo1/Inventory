@@ -1,4 +1,5 @@
 ﻿@model Model.EF.Customer
+@using Inventory.Common;
 @Html.Partial("MessagePartial")
 @if (Model != null)
 {
@@ -23,7 +24,7 @@
     <hr />
     <b>Thông Tin Giao Hàng</b>
     <h5>@Model.Name</h5>
-    <h5>@Model.Phone</h5>
+    <h5>@CommonConstants.FormatPhoneNum(Model.Phone)</h5>
     <hr />
     <b>Địa chỉ giao hàng</b>
     <h5>@Model.Address</h5>

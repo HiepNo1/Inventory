@@ -38,16 +38,17 @@ namespace Inventory.Areas.Admin.Controllers
                 long id = dao.Insert(customer);
                 if(id == 0)
                 {
-                    ModelState.AddModelError("", "Khách hàng này đã tồn tại");
+                    TempData["message"] = new XMessage("danger", "Khách hàng này đã tồn tại");
                     return View(customer);
                 }
                 if(id > 0)
                 {
+                    TempData["message"] = new XMessage("success", "Thêm thành công");
                     return RedirectToAction("Index");
                 }
                 else
                 {
-                    ModelState.AddModelError("", "Thêm không thành công");
+                    TempData["message"] = new XMessage("danger", "Thêm không thành công");
                 }
             }
             return View(customer);
@@ -70,11 +71,12 @@ namespace Inventory.Areas.Admin.Controllers
                 bool result = dao.Update(customer);
                 if (result)
                 {
+                    TempData["message"] = new XMessage("success", "Sửa thành công");
                     return RedirectToAction("Index");
                 }
                 else
                 {
-                    ModelState.AddModelError("", "Sửa không thành công");
+                    TempData["message"] = new XMessage("danger", "Sửa không thành công");
                 }
             }
             return View(customer);
@@ -84,6 +86,7 @@ namespace Inventory.Areas.Admin.Controllers
         public ActionResult Delete(long Id)
         {
             new CustomerDao().Delete(Id);
+            TempData["message"] = new XMessage("success", "Xóa thành công");
             return RedirectToAction("Index");
         }
     }

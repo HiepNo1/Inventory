@@ -58,7 +58,7 @@
                             {
                                 <tr>
                                     <td>@item.Name</td>
-                                    <td>@item.Phone</td>
+                                    <td>@CommonConstants.FormatPhoneNum(item.Phone)</td>
                                     <td>@item.Email</td>
                                     <td>@item.Address</td>
 
@@ -76,7 +76,7 @@
                                             <td>Không xác định</td>
                                         }
                                     }
-                                    <td>@item.StartDate.ToString("dd-MM-yyyy")</td>
+                                    <td>@item.StartDate.ToString("dd/MM/yyyy")</td>
                                     <td>
                                         @{if (item.UserID != null)
                                             {

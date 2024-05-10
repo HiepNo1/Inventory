@@ -31,7 +31,7 @@
                     <div class="col-lg-12">
                         <div class="col-lg-5">
                             <h4>Đơn hàng</h4>
-                            <table class="table table-hover">
+                            <table class="table table-hover table-striped">
                                 <tr>
                                     <td>Số hóa đơn</td>
                                     <td>@Model.Code</td>
@@ -63,6 +63,19 @@
                                             if (Model.Status == 4)
                                             {
                                                 <span>Hoàn thành</span>
+                                            }
+                                        }
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Hình thức thanh toán</td>
+                                    <td>
+                                        @{
+                                            if (Model.PaymentStatus)
+                                            { <span>Đã thanh toán</span>}
+                                            else
+                                            {
+                                                <span>Chưa thanh toán</span>
                                             }
                                         }
                                     </td>
@@ -118,7 +131,7 @@
                                         <th>Giá tiền</th>
                                         <th>Giảm giá</th>
                                         <th>Số lượng</th>
-                                        <th>Thành tiền</th>
+                                        <th>Tổng tiền</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -136,14 +149,21 @@
                                         </tr>
                                         totalMoney += total;
                                     }
+                                    @{ decimal totalAll = totalMoney + Model.ShippingFee;}
                                 </tbody>
                                 <tfoot>
                                     <tr>
-                                        <th colspan="4">
+                                        <td colspan="4">
                                             <a href="@Url.Action("Retrash", "Order", new { id = Model.ID })" class="btn btn-success"><i class="fa fa-rotate-left"></i> Khôi phục</a>
                                             <a href="@Url.Action("Delete", "Order", new { id = Model.ID })" class="btn btn-danger" onclick="return confirm('Đơn hàng @Model.Code sẽ bị xóa vĩnh viễn ! Bạn chắc chắn muốn xóa ?');"><i class="bi bi-trash"></i> Xóa</a>
-                                        </th>
-                                        <th colspan="2">Tổng tiền : @totalMoney.ToString("#,##0 đ")</th>
+                                        </td>
+                                        <td colspan="2">
+                                            <span>Tổng tiền : @totalMoney.ToString("#,##0 đ")</span>
+                                            <br />
+                                            <span>Phí vận chuyển : @Model.ShippingFee.ToString("#,##0 đ")</span>
+                                            <br />
+                                            <span></span>Thành tiền : @totalAll.ToString("#,##0 đ")
+                                        </td>
                                     </tr>
                                 </tfoot>
                             </table>

@@ -7,9 +7,12 @@ using Model.EF;
 using Model.ViewModels;
 using System.Data.Entity;
 using Model.Dao;
-using OfficeOpenXml;
-using System.IO;
+using NPOI.SS.UserModel;
+using NPOI.XSSF.UserModel;
+
 using Inventory.Common;
+using System.IO;
+using NPOI.SS.Util;
 
 namespace Inventory.Areas.Admin.Controllers
 {
@@ -29,12 +32,12 @@ namespace Inventory.Areas.Admin.Controllers
         }
 
         [HasCredential(RoleID = "ORDERCOUNT_STATISTIC")]
-        public ActionResult OrderQuantityData(DateTime? startDate, DateTime? endDate, int? orderType)
+        public ActionResult OrderQuantityData(DateTime startDate, DateTime endDate, int? orderType)
         {
             List<string> dates = new List<string>();
             List<int> orderCounts = new List<int>();
-
-            var query = db.Orders.Where(x => x.CreateDate >= startDate && x.CreateDate <= endDate);
+            var endOfDay = endDate.AddDays(1).AddSeconds(-1);
+            var query = db.Orders.Where(x => x.CreateDate >= startDate && x.CreateDate <= endOfDay);
 
             if (orderType != null)
             {
@@ -55,13 +58,14 @@ namespace Inventory.Areas.Admin.Controllers
         }
 
 
-        public ActionResult OrderDetailsData(DateTime? startDate, DateTime? endDate, int? orderType)
+        public ActionResult OrderDetailsData(DateTime startDate, DateTime endDate, int? orderType)
         {
             try
             {
+                var endOfDay = endDate.AddDays(1).AddSeconds(-1);
                 var orders = (from o in db.Orders
                               join c in db.Customers on o.CustomerID equals c.ID
-                              where o.CreateDate >= startDate && o.CreateDate <= endDate && (orderType == null || o.Status == orderType)
+                              where o.CreateDate >= startDate && o.CreateDate <= endOfDay && (orderType == null || o.Status == orderType)
                               select new
                               {
                                   OrderCode = o.Code,
@@ -83,12 +87,17 @@ namespace Inventory.Areas.Admin.Controllers
             }
         }
 
-        public ActionResult ExportToExcel(DateTime? startDate, DateTime? endDate, int? orderType)
+        public ActionResult ExportToExcel(DateTime startDate, DateTime endDate, int? orderType)
         {
             try
             {
+                var endOfDay = endDate.AddDays(1).AddSeconds(-1);
                 string orderTypeName = "";
-                if (orderType != null)
+                if (orderType == null)
+                {
+                    orderTypeName = "Tất cả đơn hàng";
+                }
+                else
                 {
                     switch (orderType)
                     {
@@ -108,17 +117,14 @@ namespace Inventory.Areas.Admin.Controllers
                             orderTypeName = "Đơn hàng bị hủy";
                             break;
                         default:
-                            break;
+                            ViewBag.Error = "Loại đơn hàng không hợp lệ.";
+                            return View("Error");
                     }
-                }
-                else
-                {
-                    orderTypeName = "Tất cả loại đơn hàng";
                 }
 
                 var orders = (from o in db.Orders
                               join c in db.Customers on o.CustomerID equals c.ID
-                              where o.CreateDate >= startDate && o.CreateDate <= endDate && (orderType == null || o.Status == orderType)
+                              where o.CreateDate >= startDate && o.CreateDate <= endOfDay && (orderType == null || o.Status == orderType)
                               select new
                               {
                                   OrderCode = o.Code,
@@ -133,52 +139,54 @@ namespace Inventory.Areas.Admin.Controllers
                                              select od.Quantity * p.Price).Sum() + o.ShippingFee
                               }).ToList();
 
-                var ordersWithSTT = orders.Select((order, index) => new
+                IWorkbook workbook = new XSSFWorkbook();
+                ISheet sheet = workbook.CreateSheet("Orders");
+                int rownum = 0;
+
+                IRow infoRow = sheet.CreateRow(rownum++);
+                infoRow.CreateCell(0).SetCellValue("THỐNG KÊ SỐ LƯỢNG ĐƠN HÀNG THEO TỪNG LOẠI");
+                sheet.AddMergedRegion(new CellRangeAddress(0, 0, 0, 3));
+                infoRow = sheet.CreateRow(rownum++);
+                infoRow.CreateCell(0).SetCellValue("Từ ngày:");
+                infoRow.CreateCell(1).SetCellValue(startDate.ToString("dd-MM-yyyy"));
+                infoRow = sheet.CreateRow(rownum++);
+                infoRow.CreateCell(0).SetCellValue("Đến ngày:");
+                infoRow.CreateCell(1).SetCellValue(endDate.ToString("dd-MM-yyyy"));
+                infoRow = sheet.CreateRow(rownum++);
+                infoRow.CreateCell(0).SetCellValue("Loại đơn hàng:");
+                infoRow.CreateCell(1).SetCellValue(orderTypeName);
+                infoRow = sheet.CreateRow(rownum++);
+
+                IRow headerRow = sheet.CreateRow(rownum++);
+                headerRow.CreateCell(0).SetCellValue("Mã đơn hàng");
+                headerRow.CreateCell(1).SetCellValue("Tên khách hàng");
+                headerRow.CreateCell(2).SetCellValue("Số điện thoại");
+                headerRow.CreateCell(3).SetCellValue("Số sản phẩm");
+                headerRow.CreateCell(4).SetCellValue("Phí vận chuyển");
+                headerRow.CreateCell(5).SetCellValue("Ngày đặt hàng");
+                headerRow.CreateCell(6).SetCellValue("Doanh thu");
+
+                foreach (var order in orders)
                 {
-                    STT = index + 1,
-                    order.OrderCode,
-                    order.CustomerName,
-                    order.CustomerPhone,
-                    order.ProductCount,
-                    order.ShippingFee,
-                    OrderDate = order.OrderDate.ToString("yyyy-MM-dd"),
-                    Revenue = string.Format("{0:N0} VNĐ", order.Revenue),
-                }).ToList();
-
-                ExcelPackage excel = new ExcelPackage();
-                var worksheet = excel.Workbook.Worksheets.Add("Orders");
-
-                worksheet.Cells["A1"].Value = "Loại đơn hàng: " + orderTypeName;
-                worksheet.Cells["A2"].Value = "Từ ngày: " + startDate?.ToString("yyyy-MM-dd") ?? "Không xác định";
-                worksheet.Cells["A3"].Value = "Đến ngày: " + endDate?.ToString("yyyy-MM-dd") ?? "Không xác định";
-                worksheet.Cells["A5"].Value = "STT";
-                worksheet.Cells["B5"].Value = "Mã đơn hàng";
-                worksheet.Cells["C5"].Value = "Tên khách hàng";
-                worksheet.Cells["D5"].Value = "Số điện thoại";
-                worksheet.Cells["E5"].Value = "Số sản phẩm";
-                worksheet.Cells["F5"].Value = "Phí vận chuyển";
-                worksheet.Cells["G5"].Value = "Ngày đặt hàng";
-                worksheet.Cells["H5"].Value = "Doanh thu";
-
-                int row = 6;
-                foreach (var order in ordersWithSTT)
-                {
-                    worksheet.Cells[row, 1].Value = order.STT;
-                    worksheet.Cells[row, 2].Value = order.OrderCode;
-                    worksheet.Cells[row, 3].Value = order.CustomerName;
-                    worksheet.Cells[row, 4].Value = order.CustomerPhone;
-                    worksheet.Cells[row, 5].Value = order.ProductCount;
-                    worksheet.Cells[row, 6].Value = order.ShippingFee;
-                    worksheet.Cells[row, 7].Value = order.OrderDate;
-                    worksheet.Cells[row, 8].Value = order.Revenue;
-                    row++;
+                    IRow dataRow = sheet.CreateRow(rownum++);
+                    dataRow.CreateCell(0).SetCellValue(order.OrderCode);
+                    dataRow.CreateCell(1).SetCellValue(order.CustomerName);
+                    dataRow.CreateCell(2).SetCellValue(order.CustomerPhone);
+                    dataRow.CreateCell(3).SetCellValue(order.ProductCount);
+                    dataRow.CreateCell(4).SetCellValue(order.ShippingFee.ToString("N0") + " đ");
+                    dataRow.CreateCell(5).SetCellValue(order.OrderDate.ToString("dd-MM-yyyy"));
+                    dataRow.CreateCell(6).SetCellValue(order.Revenue.ToString("N0") + " đ");
                 }
 
-                worksheet.Cells["A:H"].AutoFitColumns();
+                for (int i = 0; i < 7; i++)
+                {
+                    sheet.AutoSizeColumn(i);
+                }
 
-                byte[] excelBytes = excel.GetAsByteArray();
-                string fileName = "OrderDetails_" + DateTime.Now.ToString("yyyyMMddHHmmss") + ".xlsx";
-                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+                MemoryStream output = new MemoryStream();
+                workbook.Write(output);
+                byte[] byteArray = output.ToArray();
+                return File(byteArray, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Thống kê đơn hàng_" + DateTime.Now.ToString("yyyyMMddHHmmss") + ".xlsx");
             }
             catch (Exception ex)
             {
@@ -196,13 +204,14 @@ namespace Inventory.Areas.Admin.Controllers
         }
 
         [HasCredential(RoleID = "REVENUE_STATISTIC")]
-        public ActionResult OrderRevenueData(DateTime? startDate, DateTime? endDate)
+        public ActionResult OrderRevenueData(DateTime startDate, DateTime endDate)
         {
             List<string> dates = new List<string>();
             List<decimal> orderRevenues = new List<decimal>();
+            var endOfDay = endDate.AddDays(1).AddSeconds(-1);
             var orders = (from o in db.Orders
                           join c in db.Customers on o.CustomerID equals c.ID
-                          where o.CreateDate >= startDate && o.CreateDate <= endDate && o.Status == 4
+                          where o.CreateDate >= startDate && o.CreateDate <= endOfDay && o.Status == 4
                           select new
                           {
                               OrderCode = o.Code,
@@ -231,13 +240,14 @@ namespace Inventory.Areas.Admin.Controllers
             return Json(new { dates = dates, orderRevenues = orderRevenues }, JsonRequestBehavior.AllowGet);
         }
 
-        public ActionResult OrderDetailsRevenueData(DateTime? startDate, DateTime? endDate)
+        public ActionResult OrderDetailsRevenueData(DateTime startDate, DateTime endDate)
         {
             try
             {
+                var endOfDay = endDate.AddDays(1).AddSeconds(-1);
                 var orders = (from o in db.Orders
                               join c in db.Customers on o.CustomerID equals c.ID
-                              where o.CreateDate >= startDate && o.CreateDate <= endDate && o.Status == 4
+                              where o.CreateDate >= startDate && o.CreateDate <= endOfDay && o.Status == 4
                               select new
                               {
                                   OrderCode = o.Code,
@@ -258,7 +268,80 @@ namespace Inventory.Areas.Admin.Controllers
                 return Json(new { error = ex.Message }, JsonRequestBehavior.AllowGet);
             }
         }
+        public ActionResult ExportRevenueToExcel(DateTime startDate, DateTime endDate)
+        {
+            try
+            {
+                var endOfDay = endDate.AddDays(1).AddSeconds(-1);
+                var orders = (from o in db.Orders
+                              join c in db.Customers on o.CustomerID equals c.ID
+                              where o.CreateDate >= startDate && o.CreateDate <= endOfDay
+                              select new
+                              {
+                                  OrderCode = o.Code,
+                                  CustomerName = c.Name,
+                                  CustomerPhone = c.Phone,
+                                  ProductCount = (from od in db.OrderDetails where od.OrderID == o.ID select od.Quantity).Sum(),
+                                  ShippingFee = o.ShippingFee,
+                                  OrderDate = o.CreateDate,
+                                  Revenue = (from od in db.OrderDetails
+                                             join p in db.Products on od.ProductID equals p.ID
+                                             where od.OrderID == o.ID
+                                             select od.Quantity * p.Price).Sum() + o.ShippingFee
+                              }).ToList();
 
+                IWorkbook workbook = new XSSFWorkbook();
+                ISheet sheet = workbook.CreateSheet("Orders");
+                int rownum = 0;
+
+                IRow infoRow = sheet.CreateRow(rownum++);
+                infoRow.CreateCell(0).SetCellValue("THỐNG KÊ DOANH THU");
+                sheet.AddMergedRegion(new CellRangeAddress(0, 0, 0, 3));
+                infoRow = sheet.CreateRow(rownum++);
+                infoRow.CreateCell(0).SetCellValue("Từ ngày:");
+                infoRow.CreateCell(1).SetCellValue(startDate.ToString("dd-MM-yyyy"));
+                infoRow = sheet.CreateRow(rownum++);
+                infoRow.CreateCell(0).SetCellValue("Đến ngày:");
+                infoRow.CreateCell(1).SetCellValue(endDate.ToString("dd-MM-yyyy"));
+                infoRow = sheet.CreateRow(rownum++);
+
+                IRow headerRow = sheet.CreateRow(rownum++);
+                headerRow.CreateCell(0).SetCellValue("Mã đơn hàng");
+                headerRow.CreateCell(1).SetCellValue("Tên khách hàng");
+                headerRow.CreateCell(2).SetCellValue("Số điện thoại");
+                headerRow.CreateCell(3).SetCellValue("Số sản phẩm");
+                headerRow.CreateCell(4).SetCellValue("Phí vận chuyển");
+                headerRow.CreateCell(5).SetCellValue("Ngày đặt hàng");
+                headerRow.CreateCell(6).SetCellValue("Doanh thu");
+
+                foreach (var order in orders)
+                {
+                    IRow dataRow = sheet.CreateRow(rownum++);
+                    dataRow.CreateCell(0).SetCellValue(order.OrderCode);
+                    dataRow.CreateCell(1).SetCellValue(order.CustomerName);
+                    dataRow.CreateCell(2).SetCellValue(order.CustomerPhone);
+                    dataRow.CreateCell(3).SetCellValue(order.ProductCount);
+                    dataRow.CreateCell(4).SetCellValue(order.ShippingFee.ToString("N0") + "đ");
+                    dataRow.CreateCell(5).SetCellValue(order.OrderDate.ToString("dd-MM-yyyy"));
+                    dataRow.CreateCell(6).SetCellValue(order.Revenue.ToString("N0") + "đ");
+                }
+
+                for (int i = 0; i < 7; i++)
+                {
+                    sheet.AutoSizeColumn(i);
+                }
+
+                MemoryStream output = new MemoryStream();
+                workbook.Write(output);
+                byte[] byteArray = output.ToArray();
+                return File(byteArray, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Thống kê doanh thu_" + DateTime.Now.ToString("yyyyMMddHHmmss") + ".xlsx");
+            }
+            catch (Exception ex)
+            {
+                ViewBag.Error = ex.Message;
+                return View("Error");
+            }
+        }
         [HasCredential(RoleID = "PRODUCTCOUNT_STATISTIC")]
         public ActionResult ProductQuantity(OrderStatisticsViewModel model)
         {
@@ -266,31 +349,130 @@ namespace Inventory.Areas.Admin.Controllers
             ViewBag.EndDate = model.EndDate;
             return View(model);
         }
-        public ActionResult SalesChart(DateTime startDate, DateTime endDate)
+        [HasCredential(RoleID = "PRODUCTCOUNT_STATISTIC")]
+        public ActionResult ProductQuantityData(DateTime startDate, DateTime endDate)
         {
-            var topProducts = (from od in db.OrderDetails
-                               join o in db.Orders on od.OrderID equals o.ID
-                               where o.CreateDate >= startDate && o.CreateDate <= endDate
-                               group od by new { od.ProductID, o.CreateDate.Date } into g
-                               select new
-                               {
-                                   ProductID = g.Key.ProductID,
-                                   TotalQuantity = g.Sum(od => od.Quantity),
-                                   ProductName = db.Products.FirstOrDefault(p => p.ID == g.Key.ProductID).Name,
-                                   SalesByDate = g.Select(gr => new { Date = g.Key.Date, Quantity = g.Sum(ood => ood.Quantity) })
-                               })
-                   .OrderByDescending(g => g.TotalQuantity)
-                   .Take(10)
-                   .ToList();
-
-            var chartData = new
+            try
             {
-                ProductNames = topProducts.Select(p => p.ProductName).ToArray(),
-                SalesByDate = topProducts.Select(p => p.SalesByDate.Select(s => s.Quantity).ToArray()).ToList()
-            };
+                var endOfDay = endDate.AddDays(1).AddSeconds(-1);
+                var top10Products = (from od in db.OrderDetails
+                                     join o in db.Orders on od.OrderID equals o.ID
+                                     join p in db.Products on od.ProductID equals p.ID
+                                     where o.CreateDate >= startDate && o.CreateDate <= endOfDay
+                                     group new { od, p } by new { p.ID, p.Name, p.Image, p.Quantity, p.Price } into g
+                                     orderby g.Sum(x => x.od.Quantity) descending
+                                     select new
+                                     {
+                                         ProductID = g.Key.ID,
+                                         ProductName = g.Key.Name,
+                                         ProductImage = g.Key.Image,
+                                         ProductPrice = g.Key.Price,
+                                         StockQuantity = g.Key.Quantity,
+                                         Quantity = g.Sum(x => x.od.Quantity)
+                                     }).Take(10).ToList();
 
-            return Json(chartData, JsonRequestBehavior.AllowGet);
+                var productNames = top10Products.Select(x => x.ProductName).ToList();
+                var quantities = top10Products.Select(x => x.Quantity).ToList();
+
+                return Json(new { productNames = productNames, productQuantities = quantities }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { error = ex.Message });
+            }
         }
 
+        public ActionResult ProductDetailsData(DateTime startDate, DateTime endDate)
+        {
+            try
+            {
+                var endOfDay = endDate.AddDays(1).AddSeconds(-1);
+                var top10Products = (from od in db.OrderDetails
+                                     join o in db.Orders on od.OrderID equals o.ID
+                                     join p in db.Products on od.ProductID equals p.ID
+                                     where o.CreateDate >= startDate && o.CreateDate <= endOfDay
+                                     group new { od, p } by new { p.ID, p.Name, p.Image, p.Quantity, p.Price } into g
+                                     orderby g.Sum(x => x.od.Quantity) descending
+                                     select new
+                                     {
+                                         ProductID = g.Key.ID,
+                                         ProductName = g.Key.Name,
+                                         ProductImage = g.Key.Image,
+                                         ProductPrice = g.Key.Price,
+                                         StockQuantity = g.Key.Quantity,
+                                         Quantity = g.Sum(x => x.od.Quantity)
+                                     }).Take(10).ToList();
+                return Json(new { top10Products }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { error = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+        public ActionResult ExportProductToExcel(DateTime startDate, DateTime endDate)
+        {
+            try
+            {
+                var endOfDay = endDate.AddDays(1).AddSeconds(-1);
+                var top10Products = (from od in db.OrderDetails
+                                     join o in db.Orders on od.OrderID equals o.ID
+                                     join p in db.Products on od.ProductID equals p.ID
+                                     where o.CreateDate >= startDate && o.CreateDate <= endOfDay
+                                     group new { od, p } by new { p.ID, p.Name, p.Image, p.Quantity, p.Price } into g
+                                     orderby g.Sum(x => x.od.Quantity) descending
+                                     select new
+                                     {
+                                         ProductID = g.Key.ID,
+                                         ProductName = g.Key.Name,
+                                         ProductImage = g.Key.Image,
+                                         ProductPrice = g.Key.Price,
+                                         StockQuantity = g.Key.Quantity,
+                                         Quantity = g.Sum(x => x.od.Quantity)
+                                     }).Take(10).ToList();
+
+                IWorkbook workbook = new XSSFWorkbook();
+                ISheet sheet = workbook.CreateSheet("Products");
+                int rownum = 0;
+
+                IRow infoRow = sheet.CreateRow(rownum++);
+                infoRow.CreateCell(0).SetCellValue("THỐNG KÊ SỐ LƯỢNG SẢN PHẨM BÁN ĐƯỢC");
+                sheet.AddMergedRegion(new CellRangeAddress(0,0,0,3));
+                infoRow = sheet.CreateRow(rownum++);
+                infoRow.CreateCell(0).SetCellValue("Từ ngày: " + startDate.ToString("dd-MM-yyyy"));
+                infoRow = sheet.CreateRow(rownum++);
+                infoRow.CreateCell(0).SetCellValue("Đến ngày: " + endDate.ToString("dd-MM-yyyy"));
+                infoRow = sheet.CreateRow(rownum++);
+
+                IRow headerRow = sheet.CreateRow(rownum++);
+                headerRow.CreateCell(0).SetCellValue("Tên sản phẩm");
+                headerRow.CreateCell(1).SetCellValue("Giá bán");
+                headerRow.CreateCell(2).SetCellValue("Số lượng bán ra");
+                headerRow.CreateCell(3).SetCellValue("Số lượng còn");
+
+                foreach (var product in top10Products)
+                {
+                    IRow dataRow = sheet.CreateRow(rownum++);
+                    dataRow.CreateCell(0).SetCellValue(product.ProductName);
+                    dataRow.CreateCell(1).SetCellValue(product.ProductPrice.ToString("N0") + "đ");
+                    dataRow.CreateCell(2).SetCellValue(product.Quantity);
+                    dataRow.CreateCell(3).SetCellValue(product.StockQuantity);
+                }
+
+                for (int i = 0; i < 4; i++)
+                {
+                    sheet.AutoSizeColumn(i);
+                }
+
+                MemoryStream output = new MemoryStream();
+                workbook.Write(output);
+                byte[] byteArray = output.ToArray();
+                return File(byteArray, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Thống kê sản phẩm_" + DateTime.Now.ToString("yyyyMMddHHmmss") + ".xlsx");
+            }
+            catch (Exception ex)
+            {
+                ViewBag.Error = ex.Message;
+                return View("Error");
+            }
+        }
     }
 }

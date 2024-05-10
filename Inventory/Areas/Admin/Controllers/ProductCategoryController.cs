@@ -11,7 +11,7 @@ using PagedList;
 namespace Inventory.Areas.Admin.Controllers
 {
     [ClearSessions("SelectedProducts", "SelectedReceipts")]
-    public class ProductCategoryController : Controller
+    public class ProductCategoryController : BaseController
     {
         // GET: Admin/ProductCategory
         [HasCredential(RoleID = "VIEW_CATEGORY")]
@@ -41,16 +41,17 @@ namespace Inventory.Areas.Admin.Controllers
                 long id = dao.Insert(category);
                 if(id == 0)
                 {
-                    ModelState.AddModelError("", "Danh mục sản phẩm này đã tồn tại");
+                    TempData["message"] = new XMessage("danger", "Danh mục sản phẩm này đã tồn tại");
                     return View(category);
                 }
                 if(id > 0)
                 {
+                    TempData["message"] = new XMessage("success", "Thêm thành công");
                     return RedirectToAction("Index");
                 }
                 else
                 {
-                    ModelState.AddModelError("", "Thêm ko thành công");
+                    TempData["message"] = new XMessage("danger", "Thêm không thành công");
                 }
             }
             return View(category);
@@ -75,11 +76,12 @@ namespace Inventory.Areas.Admin.Controllers
                 bool result = dao.Update(category);
                 if (result)
                 {
+                    TempData["message"] = new XMessage("success", "Sửa thành công");
                     return RedirectToAction("Index");
                 }
                 else
                 {
-                    ModelState.AddModelError("", "Sửa ko thành công");
+                    TempData["message"] = new XMessage("danger", "Sửa không thành công");
                 }
             }
             return View(category);
@@ -89,6 +91,7 @@ namespace Inventory.Areas.Admin.Controllers
         public ActionResult Delete(long id)
         {
             new CategoryDao().Delete(id);
+            TempData["message"] = new XMessage("success", "Xóa thành công");
             return RedirectToAction("Index");
         }
     }

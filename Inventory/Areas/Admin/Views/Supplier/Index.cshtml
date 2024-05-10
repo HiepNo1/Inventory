@@ -55,7 +55,7 @@
                             {
                                 <tr>
                                     <td>@item.Name</td>
-                                    <td>@item.Phone</td>
+                                    <td>@CommonConstants.FormatPhoneNum(item.Phone)</td>
                                     <td>@item.Email</td>
                                     <td>@item.Address</td>
                                     <td>@item.Representative</td>
@@ -71,7 +71,7 @@
                                             }
                                         }
                                         <a href="~/Admin/Supplier/Edit/@item.ID" @(isAdmin || (credentials != null && credentials.Contains("EDIT_SUPPLIER")) ? "" : "disabled") class="btn btn-primary"> <i class="bi bi-pencil"></i></a>
-                                        <a href="~/Admin/Supplier/DeleTrash/@item.ID" class="btn btn-danger"><i class="bi bi-trash"></i></a>
+                                        <a href="~/Admin/Supplier/DeleTrash/@item.ID" @(isAdmin || (credentials != null && credentials.Contains("EDIT_SUPPLIER")) ? "" : "disabled") class="btn btn-danger"><i class="bi bi-trash"></i></a>
                                         @*<form method="post" action="@Url.Action("Delete","Product",new { id = item.ID})">
 
             <input type="submit" value="Xóa" class="btn btn-primary" onclick="return confirm('Bạn có muốn xóa sản phẩm này ?');" />
@@ -88,4 +88,4 @@
             </div>
         </div>
     </div>
-</div>            
+</div>              

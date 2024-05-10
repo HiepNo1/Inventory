@@ -20,18 +20,17 @@ namespace Model.Dao
 
         private IQueryable<ProductViewModel> inputProduct()
         {
-            return (from a in db.Products
-                    join b in db.ProductCategories
-                    on a.CategoryID equals b.ID
-                    join c in db.ProductCategories 
-                    on b.ParentID equals c.ID
+            return (from a in db.Products 
+                    join b in db.ProductCategories on a.CategoryID equals b.ID
+                    join c in db.ProductCategories on b.ParentID equals c.ID into categories
+                    from c in categories.DefaultIfEmpty()
                     select new ProductViewModel()
                     {
                         ModifieDate = a.ModifieDate,
                         Status = a.Status,
                         CateID = b.ID,
                         CateName = b.Name,
-                        CateParent = c.Name,
+                        CateParent = c != null ? c.Name : "",
                         ID = a.ID,
                         Name = a.Name,
                         Code = a.Code,
@@ -109,7 +108,7 @@ namespace Model.Dao
         public bool Update(Product product)
         {
             var pro = db.Products.Find(product.ID);
-            if(pro == null)
+            if(pro == null) 
             {
                 return false;
             }

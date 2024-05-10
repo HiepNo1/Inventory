@@ -12,7 +12,7 @@ namespace Model.ViewModels
         public Customer Customer { get; set; }
         public List<OrderDetail> LstOrderDetail { get; set; }
         public Order Order { get; set; }
-        public List<Product> Products { get; set; }
+        public List<ProductDetailInOrder> Products { get; set; }
         public string SearchProduct { get; set; }
         public string SearchCustomer { get; set; }
     }

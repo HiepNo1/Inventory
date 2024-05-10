@@ -56,7 +56,9 @@ namespace Model.Dao
             if (createDate != null)
             {
                 var createDateValue = createDate.Value.Date;
-                model = model.Where(x => x.CreateDate.Date == createDateValue.Date);
+                model = model.Where(x => x.CreateDate.Year == createDateValue.Year
+                                    && x.CreateDate.Month == createDateValue.Month
+                                    && x.CreateDate.Day == createDateValue.Day);
             }
             if (status != null)
             {
@@ -98,7 +100,7 @@ namespace Model.Dao
             }
             else
             {
-                if (order.Status == 1 || order.Status == 2)
+                if (order.Status == 1 || order.Status == 2 && !order.PaymentStatus)
                 {
                     int term = (int)order.Status;
                     order.Status = 0;

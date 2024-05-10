@@ -17,5 +17,6 @@ namespace Model.ViewModels
         public List<PermissionViewModel> ReceiptPermission { get; set; }
         public List<PermissionViewModel> EmployeePermission { get; set; }
         public List<PermissionViewModel> StatisticPermission { get; set; }
+        public List<PermissionViewModel> RolePermission { get; set; }
     }
 }

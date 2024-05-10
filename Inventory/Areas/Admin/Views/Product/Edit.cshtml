@@ -133,7 +133,7 @@
                                 @Html.LabelFor(model => model.Image, htmlAttributes: new { @class = "control-label col-md-2" })
                                 <div class="col-md-10">
                                     <img id="imagePreview" src="@Url.Content(Model.Image)" alt="Xem trước hình ảnh" style="max-width: 100px; max-height: 100px;" />
-                                    <input type="text" id="imageFileName" name="imageFileName" readonly="readonly" class="form-control" value="@Model.Image" />
+                                    <input type="hidden" id="imageFileName" name="imageFileName" readonly="readonly" class="form-control" value="@Model.Image" />
                                     <input type="file" name="fileImage" id="fileImage" onchange="updateFileName(this)" />
 
                                     @Html.ValidationMessageFor(model => model.Image, "", new { @class = "text-danger" })

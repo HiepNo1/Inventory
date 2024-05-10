@@ -1,5 +1,5 @@
 ﻿@model Model.ViewModels.ReceiptViewModel
-
+@using Inventory.Common;
 @{
     ViewBag.Title = "Chi tiết đơn nhập";
     Layout = "~/Areas/Admin/Views/Shared/_Layouts.cshtml";
@@ -38,15 +38,41 @@
                                 </tr>
                                 <tr>
                                     <td>Ngày tạo</td>
-                                    <td>@Model.CreateDate</td>
+                                    <td>@Model.CreateDate.ToString("dd/MM/yyyy")</td>
                                 </tr>
                                 <tr>
                                     <td>Hình thức thanh toán</td>
-                                    <td>@Model.Payment</td>
+                                    <td>
+                                        @{
+                                            if (Model.Payment == true)
+                                            {
+                                                <span>Tiền mặt</span>
+                                            }
+                                            if (Model.Payment == false)
+                                            {
+                                                <span>Chuyển khoản</span>
+                                            }
+                                            else
+                                            {
+                                                <span>Chưa có</span>
+                                            }
+                                        }
+                                    </td>
                                 </tr>
                                 <tr>
                                     <td>Trạng thái</td>
-                                    <td>@Model.Status</td>
+                                    <td>
+                                        @{
+                                            if (Model.PaymentStatus)
+                                            {
+                                                <span>Đã thanh toán</span>
+                                            }
+                                            else
+                                            {
+                                                <span>Chưa thanh toán</span>
+                                            }
+                                        }
+                                    </td>
                                 </tr>
                             </table>
                         </div>
@@ -59,7 +85,7 @@
                                 </tr>
                                 <tr>
                                     <td>SĐT</td>
-                                    <td>@Model.SupplierPhone</td>
+                                    <td>@CommonConstants.FormatPhoneNum(Model.SupplierPhone)</td>
                                 </tr>
                                 <tr>
                                     <td>Email</td>
@@ -69,7 +95,7 @@
                                     <td>Địa chỉ nhận</td>
                                     <td>@Model.SupplierAddress</td>
                                 </tr>
-                                
+
                             </table>
                         </div>
                     </div>
@@ -84,7 +110,7 @@
                                     <tr>
                                         <th>Tên sản phẩm</th>
                                         <th>Ảnh sản phẩm</th>
-                                        <th>Giá nhập</th>                                     
+                                        <th>Giá nhập</th>
                                         <th>Số lượng nhập</th>
                                         <th>Thành tiền</th>
                                     </tr>
@@ -97,7 +123,7 @@
                                         <tr>
                                             <td>@detail.ProductName</td>
                                             <td><img src="@detail.ProductImage" style="width:100px; height:100px" /> </td>
-                                            <td>@detail.ImportPrice.ToString("#,##0 đ")</td>                        
+                                            <td>@detail.ImportPrice.ToString("#,##0 đ")</td>
                                             <td>@detail.Quantity</td>
                                             <td>@total.ToString("#,##0 đ")</td>
                                         </tr>
@@ -107,7 +133,7 @@
                                 <tfoot>
                                     <tr>
                                         <th colspan="4">
-                                            
+
                                         </th>
                                         <th colspan="2">Tổng tiền : @totalMoney.ToString("#,##0 đ")</th>
                                     </tr>

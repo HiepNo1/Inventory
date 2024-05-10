@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Data.OleDb;
+using System.IO;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
@@ -14,12 +17,13 @@ namespace Inventory.Areas.Admin.Controllers
     public class ProductController : BaseController
     {
         private ProductDao productDao = new ProductDao();
+        private InventoryDbContext db = new InventoryDbContext();
         // GET: Admin/Product
 
         [HasCredential(RoleID = "VIEW_PRODUCT")]
         public ActionResult Index(string searchString, decimal? firstMoney, decimal? lastMoney, string cateName, int page = 1, int pageSize = 5)
         {
-            var model = productDao.ListAllString(searchString, firstMoney, lastMoney, cateName, page, pageSize);          
+            var model = productDao.ListAllString(searchString, firstMoney, lastMoney, cateName, page, pageSize);
             ViewBag.firstMoney = firstMoney;
             ViewBag.lastmoney = lastMoney;
             ViewBag.searchString = searchString;
@@ -47,9 +51,9 @@ namespace Inventory.Areas.Admin.Controllers
         [ValidateInput(false)]
         public ActionResult Create(Product product, HttpPostedFileBase fileImage)
         {
-            if(ModelState.IsValid)
+            if (ModelState.IsValid)
             {
-                if(fileImage!= null && fileImage.ContentLength > 0)
+                if (fileImage != null && fileImage.ContentLength > 0)
                 {
                     string rootFolder = Server.MapPath("/Images/");
                     string pathImage = rootFolder + fileImage.FileName;
@@ -58,12 +62,13 @@ namespace Inventory.Areas.Admin.Controllers
                 }
                 product.CreateBy = GetUserSession().UserName;
                 long id = productDao.Insert(product);
-                if(id == 0)
+                if (id == 0)
                 {
-                    ModelState.AddModelError("", "Sản phẩm này đã tồn tại");
+                    TempData["message"] = new XMessage("danger", "Sản phẩm này đã tồn tại");
+
                     return View(product);
                 }
-                if(id > 0)
+                if (id > 0)
                 {
                     TempData["message"] = new XMessage("success", "Thêm sản phẩm thành công");
                     return RedirectToAction("Index");
@@ -104,7 +109,7 @@ namespace Inventory.Areas.Admin.Controllers
                 product.ModifieBy = GetUserSession().UserName;
                 product.Status = true;
                 product.ModifieDate = DateTime.Now;
-                bool result = productDao.Update(product);                
+                bool result = productDao.Update(product);
                 if (result)
                 {
                     TempData["message"] = new XMessage("success", "Sửa sản phẩm thành công");
@@ -121,9 +126,9 @@ namespace Inventory.Areas.Admin.Controllers
 
         [HasCredential(RoleID = "DELETE_PRODUCT")]
         public ActionResult Delete(long id)
-        {           
+        {
             bool proToDelete = productDao.Delete(id);
-            if(proToDelete)
+            if (proToDelete)
             {
                 TempData["message"] = new XMessage("success", "Xóa sản phẩm thành công");
             }
@@ -136,13 +141,13 @@ namespace Inventory.Areas.Admin.Controllers
 
         [HasCredential(RoleID = "VIEW_PRODUCT")]
         public ActionResult Status(long id)
-        {           
+        {
             var product = productDao.GetByID(id);
-            if(product == null)
+            if (product == null)
             {
                 TempData["message"] = new XMessage("danger", "Sản phẩm không tồn tại");
                 return RedirectToAction("Index");
-            }   
+            }
             product.ModifieBy = GetUserSession().UserName;
             product.Status = (product.Status == true) ? false : true;
             productDao.Update(product);
@@ -169,7 +174,7 @@ namespace Inventory.Areas.Admin.Controllers
         [HasCredential(RoleID = "VIEW_PRODUCT")]
         public ActionResult Trash(string searchString, int page = 1, int pageSize = 5)
         {
-            var model = productDao.ListTrash(searchString, page, pageSize);          
+            var model = productDao.ListTrash(searchString, page, pageSize);
             ViewBag.searchString = searchString;
             return View(model);
         }
@@ -189,5 +194,7 @@ namespace Inventory.Areas.Admin.Controllers
             TempData["message"] = new XMessage("success", "Sản phẩm đã được khôi phục thành công");
             return RedirectToAction("Trash");
         }
+
     }
+
 }

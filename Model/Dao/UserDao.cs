@@ -7,7 +7,7 @@ using Model.EF;
 using PagedList;
 using PagedList.Mvc;
 
-namespace Model.Dao 
+namespace Model.Dao
 {
     public class UserDao
     {
@@ -19,15 +19,15 @@ namespace Model.Dao
         public IEnumerable<User> ListAllPaging(string catePage, string searchString, int page, int pageSize)
         {
             IQueryable<User> model = db.Users;
-            if(catePage == "Trash")
+            if (catePage == "Trash")
             {
                 model = model.Where(x => x.Status == false);
             }
-            if(!string.IsNullOrEmpty(searchString))
+            if (!string.IsNullOrEmpty(searchString))
             {
                 model = model.Where(x => x.Phone.Contains(searchString) || x.Name.Contains(searchString));
             }
-            return model.OrderByDescending(x=>x.CreateDate).ToPagedList(page, pageSize);
+            return model.OrderByDescending(x => x.CreateDate).ToPagedList(page, pageSize);
         }
         public User GetById(long id)
         {
@@ -39,22 +39,25 @@ namespace Model.Dao
         }
         public bool Update(User entity)
         {
-            try
-            {
-                var user = db.Users.Find(entity.ID);
-                user.ModifieDate = DateTime.Now;
-                db.SaveChanges();
-                return true;
-            }
-            catch
+            var user = db.Users.Find(entity.ID);
+            if(user == null)
             {
                 return false;
             }
+            else
+            {
+                user.GroupID = entity.GroupID;
+                user.Name = entity.Name;
+                user.Phone = entity.Phone;
+                user.ModifieDate = DateTime.Now;
+                db.SaveChanges();
+                return true;
+            }           
         }
         public long Insert(User user)
         {
             var exist = db.Users.SingleOrDefault(x => x.UserName == user.UserName);
-            if(exist != null)
+            if (exist != null)
             {
                 return 0;
             }
@@ -63,19 +66,20 @@ namespace Model.Dao
             db.SaveChanges();
             return user.ID;
         }
-        
+
         public List<string> GetListCredential(string userName)
         {
-            
+
             var user = db.Users.Single(x => x.UserName == userName);
-            var data = (from a in db.Credentials                       
+            var data = (from a in db.Credentials
                         join b in db.Roles on a.RoleID equals b.ID
                         where a.UserID == user.ID
                         select new
                         {
                             RoleID = a.RoleID,
                             UserID = a.UserID
-                        }).AsEnumerable().Select(x => new Credential() { 
+                        }).AsEnumerable().Select(x => new Credential()
+                        {
                             RoleID = x.RoleID,
                             UserID = x.UserID
                         });
@@ -89,15 +93,15 @@ namespace Model.Dao
         public int Login(string username, string password, bool isLoginAdmin = false)
         {
             var result = db.Users.SingleOrDefault(x => x.UserName == username);
-            if(result == null)
+            if (result == null)
             {
                 return 0;
             }
             else
             {
-                if(isLoginAdmin == true)
+                if (isLoginAdmin == true)
                 {
-                    if(result.GroupID == "ADMIN" || result.GroupID == "MOD")
+                    if (result.GroupID != "CUSTOMER")
                     {
                         if (result.Status == false)
                         {
@@ -109,7 +113,7 @@ namespace Model.Dao
                                 return 1;
                             else
                                 return 0;
-                        }                        
+                        }
                     }
                     else
                     {
@@ -129,10 +133,10 @@ namespace Model.Dao
                         else
                             return 0;
                     }
-                }               
+                }
             }
         }
-                
+
         public bool Delete(long id)
         {
             try
@@ -145,7 +149,7 @@ namespace Model.Dao
             catch
             {
                 return false;
-            }       
+            }
         }
     }
 }

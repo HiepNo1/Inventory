@@ -42,7 +42,12 @@
                                     </table>
                                 </div>
                                 <div class="col-lg-6">
-                                    
+                                    <select class="form-control" name="paymentStatus">
+                                        <option value="">Trạng thái</option>
+                                        <option value="true" @(ViewBag.paymentStatus == true ? "selected" : "")>Đã thanh toán</option>
+                                        <option value="false" @(ViewBag.paymentStatus == false ? "selected" : "")>Chưa thanh toán</option>
+
+                                    </select>
                                 </div>
                             </div>
                         </form>
@@ -75,11 +80,30 @@
                                 <tr>
                                     <td>@item.Code</td>
                                     <td>@item.SupplierName</td>
-                                    <td>@item.SupplierPhone</td>
-                                    <td>@item.CreateDate</td>
-                                    <td>@item.Payment</td>
-                                    <td>@item.Status</td>
-                                    
+                                    <td>@CommonConstants.FormatPhoneNum(item.SupplierPhone)</td>
+                                    <td>@item.CreateDate.ToString("dd/MM/yyyy")</td>
+                                    <td>
+                                        @{
+                                            if (item.Payment == false)
+                                            {<span>Tiền mặt</span>}
+                                            if (item.Payment == true)
+                                            {<span>Chuyển khoản</span>}
+                                            else
+                                            {
+                                                <span>Chưa có</span>
+                                            }
+                                        }
+                                    </td>
+                                    <td>
+                                        @{
+                                            if (item.PaymentStatus == true)
+                                            {<span>Đã thanh toán</span>}
+                                            if (item.PaymentStatus == false)
+                                            {<span>Chưa thanh toán</span>}
+                                        }
+
+                                    </td>
+
                                     <td>
                                         <a href="~/Admin/Receipt/Detail/@item.ID" @(isAdmin || (credentials != null && credentials.Contains("DETAIL_RECEIPT")) ? "" : "disabled") class="btn btn-success"><i class="bi bi-eye"></i></a>
                                     </td>
@@ -88,7 +112,7 @@
 
                         </tbody>
                     </table>
-                    @Html.PagedListPager(Model, page => Url.Action("Index", new { page, @searchString = ViewBag.searchString, @createDate = ViewBag.createDate }))
+                    @Html.PagedListPager(Model, page => Url.Action("Index", new { page, @searchString = ViewBag.searchString, @createDate = ViewBag.createDate, @paymentStatus = ViewBag.paymentStatus }))
                 </div>
                 <!-- /.table-responsive -->
             </div>

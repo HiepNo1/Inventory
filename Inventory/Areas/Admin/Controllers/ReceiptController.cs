@@ -23,11 +23,12 @@ namespace Inventory.Areas.Admin.Controllers
         // GET: Admin/Receipt
         [ClearSessions("SelectedReceipts")]
         [HasCredential(RoleID = "VIEW_RECEIPT")]
-        public ActionResult Index(string searchString, DateTime? createDate, int page = 1, int pageSize = 5)
+        public ActionResult Index(string searchString, bool? paymentStatus, DateTime? createDate, int page = 1, int pageSize = 5)
         {
-            var receipt = receiptDao.GetList("", searchString, createDate, page, pageSize);
+            var receipt = receiptDao.GetList("", searchString, paymentStatus, createDate, page, pageSize);
             ViewBag.searchString = searchString;
             ViewBag.createDate = createDate != null ? createDate.Value.ToString("yyyy-MM-dd") : "";
+            ViewBag.PaymentStatus = paymentStatus;
             return View(receipt);
         }
         [ClearSessions("SelectedReceipts")]
@@ -136,13 +137,18 @@ namespace Inventory.Areas.Admin.Controllers
                 var foundProducts = productDao.GetBySearch(searchProduct);
                 if (foundProducts != null && foundProducts.Any())
                 {
-                    List<Product> existingProducts = Session["SelectedReceipts"] as List<Product> ?? new List<Product>();
+                    List<ProductDetailInReceipt> existingProducts = Session["SelectedReceipts"] as List<ProductDetailInReceipt> ?? new List<ProductDetailInReceipt>();
 
                     foreach (var product in foundProducts)
                     {
-                        if (!existingProducts.Any(p => p.ID == product.ID))
+                        if (!existingProducts.Any(p => p.ProductID == product.ID))
                         {
-                            existingProducts.Add(product);
+                            existingProducts.Add(new ProductDetailInReceipt { 
+                                ProductID = product.ID,
+                                ImportPrice = 0,
+                                ImportQuantity = 1,
+                                TotalPrice = 0
+                            });
                         }
                     }
 
@@ -160,7 +166,7 @@ namespace Inventory.Areas.Admin.Controllers
             {
                 TempData["messagePartial"] = new XMessage("danger", "Vui lòng nhập tên hoặc mã sản phẩm.");
             }
-            List<Product> currentProducts = Session["SelectedReceipts"] as List<Product> ?? new List<Product>();
+            List<ProductDetailInReceipt> currentProducts = Session["SelectedReceipts"] as List<ProductDetailInReceipt> ?? new List<ProductDetailInReceipt>();
             receiptViewModel.Products = currentProducts;
             return PartialView("_ReceiptDetail", receiptViewModel);
         }
@@ -218,11 +224,16 @@ namespace Inventory.Areas.Admin.Controllers
                 }
                 if (id > 0)
                 {
-                    List<Product> existingProducts = Session["SelectedReceipts"] as List<Product> ?? new List<Product>();
+                    List<ProductDetailInReceipt> existingProducts = Session["SelectedReceipts"] as List<ProductDetailInReceipt> ?? new List<ProductDetailInReceipt>();
 
-                    if (!existingProducts.Any(p => p.ID == product.ID))
+                    if (!existingProducts.Any(p => p.ProductID == product.ID))
                     {
-                        existingProducts.Add(product);
+                        existingProducts.Add(new ProductDetailInReceipt
+                        {
+                            ProductID = product.ID,
+                            ImportPrice = 0,
+                            ImportQuantity = 1
+                        });
                     }
 
                     Session["SelectedReceipts"] = existingProducts;
@@ -245,10 +256,10 @@ namespace Inventory.Areas.Admin.Controllers
         [HttpPost]
         public ActionResult DeleteProduct(int productId)
         {
-            List<Product> products = Session["SelectedReceipts"] as List<Product>;
+            List<ProductDetailInReceipt> products = Session["SelectedReceipts"] as List<ProductDetailInReceipt>;
             if (products != null)
             {
-                var productToRemove = products.FirstOrDefault(p => p.ID == productId);
+                var productToRemove = products.FirstOrDefault(p => p.ProductID == productId);
                 if (productToRemove != null)
                 {
                     products.Remove(productToRemove);
@@ -257,6 +268,32 @@ namespace Inventory.Areas.Admin.Controllers
                 }
             }
             return Json(new { success = false, message = "Failed to remove product from session." });
+        }
+
+        [HttpPost]
+        public ActionResult SaveProductDetails(ProductDetailInReceipt productDetail)
+        {
+            if (Session["SelectedReceipts"] == null)
+            {
+                Session["SelectedReceipts"] = new List<ProductDetailInReceipt>();
+            }
+
+            var productDetails = (List<ProductDetailInReceipt>)Session["SelectedReceipts"];
+
+            var existingProductDetail = productDetails.FirstOrDefault(p => p.ProductID == productDetail.ProductID);
+
+            if (existingProductDetail != null)
+            {
+                existingProductDetail.ImportQuantity = productDetail.ImportQuantity;
+                existingProductDetail.ImportPrice = productDetail.ImportPrice;
+                existingProductDetail.TotalPrice = productDetail.ImportQuantity * productDetail.ImportPrice;
+            }
+            else
+            {
+                productDetails.Add(productDetail);
+            }
+
+            return Json(new { success = true });
         }
     }
 }

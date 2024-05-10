@@ -1,8 +1,12 @@
 ﻿@model PagedList.IPagedList<Model.EF.Role>
 @using PagedList.Mvc;
+@using Inventory.Common;
 @{
     ViewBag.Title = "Quản lý quyền";
     Layout = "~/Areas/Admin/Views/Shared/_Layouts.cshtml";
+    var credentials = Session[CommonConstants.SESSION_CREDENTIALS] as List<string>;
+    var userLogin = (UserLogin)Session[CommonConstants.USER_SESSION];
+    bool isAdmin = (userLogin.GroupID == "ADMIN") ? true : false;
 }
 
 @section header{
@@ -27,7 +31,7 @@
                         </form>
                     </div>
                     <div class="col-lg-6 text-right">
-                        <a href="~/Admin/Role/Create" class="btn btn-success"><i class="bi bi-plus"></i> Thêm mới</a>
+                        <a href="~/Admin/Role/Create" @(isAdmin || (credentials != null && credentials.Contains("ADD_ROLE")) ? "" : "disabled") class="btn btn-success"><i class="bi bi-plus"></i> Thêm mới</a>
                     </div>
                 </div>
             </div>
@@ -49,8 +53,8 @@
                                     <td>@item.ID</td>
                                     <td>@item.Name</td>                                    
                                     <td>
-                                        <a href="~/Admin/Role/Edit/@item.ID" class="btn btn-primary"> <i class="bi bi-pencil"></i></a>
-                                        <a href="~/Admin/Role/Delete/@item.ID" class="btn btn-danger" onclick="return confirm('Bạn có muốn xóa quyền này ?');"><i class="bi bi-trash"></i></a>
+                                        <a href="~/Admin/Role/Edit/@item.ID" @(isAdmin || (credentials != null && credentials.Contains("EDIT_ROLE")) ? "" : "disabled") class="btn btn-primary"> <i class="bi bi-pencil"></i></a>
+                                        <a href="~/Admin/Role/Delete/@item.ID" @(isAdmin || (credentials != null && credentials.Contains("DELETE_ROLE")) ? "" : "disabled") class="btn btn-danger" onclick="return confirm('Bạn có muốn xóa quyền này ?');"><i class="bi bi-trash"></i></a>
                                     </td>
                                 </tr>
                             }

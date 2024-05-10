@@ -37,7 +37,7 @@
                                         <td>
                                             @Html.DisplayFor(model => model.Name)
                                         </td>
-                                    </tr>                                  
+                                    </tr>
                                     <tr>
                                         <td>
                                             <b>Hình ảnh</b>
@@ -45,7 +45,7 @@
                                         <td>
                                             <img src="@Model.Image" style="width:200px; height:200px" />
                                         </td>
-                                    </tr>                                   
+                                    </tr>
 
                                 </table>
 
@@ -59,7 +59,7 @@
                                         <td>
                                             @Html.DisplayFor(model => model.CateName)
                                         </td>
-                                    </tr>   
+                                    </tr>
                                     <tr>
                                         <td>
                                             <b>Chất liệu</b>
@@ -116,11 +116,20 @@
                             <div class="col-lg-7">
                                 <table class="table table-hover">
                                     <tr>
-                                        <td>
+                                        <td style="width : 34%">
                                             <b>Chi tiết sản phẩm</b>
                                         </td>
                                         <td>
-                                            @Html.DisplayFor(model => model.Detail)
+                                            @{
+                                                if (Model.Detail == null)
+                                                {
+                                                    <span>Chưa có chi tiết</span>
+                                                }
+                                                else
+                                                {
+                                                    <span>@Model.Detail</span>
+                                                }
+                                            }
                                         </td>
                                     </tr>
                                 </table>
@@ -128,11 +137,20 @@
                             <div class="col-lg-5">
                                 <table class="table table-hover">
                                     <tr>
-                                        <td>
+                                        <td style="width : 43%">
                                             <b>Mô tả sản phẩm</b>
                                         </td>
                                         <td>
-                                            @Html.DisplayFor(model => model.Description)
+                                            @{
+                                                if (Model.Description == null)
+                                                {
+                                                    <span>Chưa có mô tả</span>
+                                                }
+                                                else
+                                                {
+                                                    <span>@Model.Description</span>
+                                                }
+                                            }
                                         </td>
                                     </tr>
                                 </table>

@@ -166,15 +166,8 @@ namespace Inventory.Areas.Admin.Controllers
             }
         }
 
-        public ActionResult Profile(long id)
+        public void GetAllPermission(long id, AllPermission allPermission)
         {
-            return View(userDao.GetById(id));
-        }
-
-        [HttpGet]
-        public ActionResult Permissions(long id)
-        {
-            AllPermission allPermission = new AllPermission();
             allPermission.ProductPermission = GetChildPermissions("_PRODUCT", id);
             allPermission.SupplierPermission = GetChildPermissions("_SUPPLIER", id);
             allPermission.CustomerPermission = GetChildPermissions("_CUSTOMER", id);
@@ -184,9 +177,15 @@ namespace Inventory.Areas.Admin.Controllers
             allPermission.ReceiptPermission = GetChildPermissions("_RECEIPT", id);
             allPermission.StatisticPermission = GetChildPermissions("_STATISTIC", id);
             allPermission.EmployeePermission = GetChildPermissions("_EMPLOYEE", id);
-
+            allPermission.RolePermission = GetChildPermissions("_ROLE", id);
             var user = userDao.GetById(id);
-            ViewBag.UserName = user.UserName;
+            ViewBag.UserName = user.UserName;           
+        }
+        [HttpGet]
+        public ActionResult Permissions(long id)
+        {
+            AllPermission allPermission = new AllPermission();
+            GetAllPermission(id, allPermission);
             return View(allPermission);
         }
 
@@ -213,18 +212,7 @@ namespace Inventory.Areas.Admin.Controllers
                 return RedirectToAction("Index");
             }
             var allPermission = new AllPermission();
-            allPermission.ProductPermission = GetChildPermissions("_PRODUCT", id);
-            allPermission.SupplierPermission = GetChildPermissions("_SUPPLIER", id);
-            allPermission.CustomerPermission = GetChildPermissions("_CUSTOMER", id);
-            allPermission.CategoryPermission = GetChildPermissions("_CATEGORY", id);
-            allPermission.UserPermission = GetChildPermissions("_USER", id);
-            allPermission.OrderPermission = GetChildPermissions("_ORDER", id);
-            allPermission.ReceiptPermission = GetChildPermissions("_RECEIPT", id);
-            allPermission.StatisticPermission = GetChildPermissions("_STATISTIC", id);
-            allPermission.EmployeePermission = GetChildPermissions("_EMPLOYEE", id);
-
-            var user = userDao.GetById(id);
-            ViewBag.UserName = user.UserName;
+            GetAllPermission(id, allPermission);
             return View(allPermission);
         }
 
@@ -234,7 +222,6 @@ namespace Inventory.Areas.Admin.Controllers
             db.Credentials.RemoveRange(oldCredentials);
             db.SaveChanges();
 
-            // Thêm các quyền mới được chọn vào CSDL
             foreach (var permissionId in selectedPermissions)
             {
                 db.Credentials.Add(new Credential { UserID = userId, RoleID = permissionId });       

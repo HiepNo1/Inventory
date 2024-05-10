@@ -14,8 +14,9 @@
             </tr>
         </thead>
         <tbody>
-            @foreach (var product in Model.Products)
+            @foreach (var detail in Model.Products)
             {
+                var product = new Model.EF.InventoryDbContext().Products.Find(detail.ProductID);
                 decimal money = product.Price * (1 - (decimal)(0.01 * product.Sale));
                 <tr id="product_@product.ID" class="product-row">
                     <td style="vertical-align: middle; text-align: center">@product.Code</td>
@@ -32,7 +33,8 @@
                         </table>
                     </td>
                     <td style="vertical-align: middle;">
-                        <span style="color : blue" id="price_@product.ID">@money.ToString("#,##0 đ")</span><br />
+                        <span style="color : blue" id="price_@product.ID">@detail.Price.ToString("#,##0 đ")</span><br />
+                        <input class="price" value="@detail.Price" type="hidden"/>
                         @if (product.Sale > 0)
                         {
                             <del>@product.Price.ToString("#,##0 đ")</del>
@@ -42,10 +44,10 @@
 
                     <td style="vertical-align: middle;">
                         <input type="hidden" class="product-id" value="@product.ID" />
-                        <input type="number" id="quantity_@product.ID" style="width: 80px;" class="quantity form-control" name="quantity_@product.ID" value="1" min="1" max="@product.Quantity" onchange="calculateTotalPrice(@product.ID)" />
+                        <input type="number" id="quantity_@product.ID" style="width: 80px;" class="quantity form-control" name="quantity_@product.ID" value="@detail.Quantity" min="1" max="@product.Quantity" onchange="calculateTotalPrice(@product.ID)" />
                     </td>
                     <td style="vertical-align: middle;" id="totalPrice_@product.ID" class="totalPrice">
-                        @(money.ToString("#,##0 đ"))
+                        @detail.TotalPrice.ToString("#,##0 đ")
                     </td>
                     <td style="vertical-align: middle;">
                         <button class="delete-product-btn" style="background-color: transparent; border: none; padding: 0;" onclick="deleteProduct(@product.ID)">
@@ -86,7 +88,6 @@ else
         if (row) {
             row.remove();
 
-            // Xóa sản phẩm khỏi session
             $.ajax({
                 type: "POST",
                 url: '@Url.Action("DeleteProduct", "Order")',
@@ -109,4 +110,38 @@ else
         var formattedTotalPrice = totalPrice.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " đ";
         document.getElementById("totalPrice_" + productId).innerText = formattedTotalPrice;
     };
+
+    function saveProductDetails(productDetail) {
+        $.ajax({
+            url: '@Url.Action("SaveProductDetails", "Order")',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ productDetail: productDetail }),
+            success: function (response) {
+                if (response.success) {
+                    console.log('Đã lưu chi tiết thành công!');
+                } else {
+                    console.error('Lưu chi tiết thất bại');
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error(xhr.responseText);
+                alert('Đã xảy ra lỗi: ' + error);
+            }
+        });
+    }
+
+    $(document).on('input', '.quantity', function () {
+    var productId = $(this).closest('.product-row').find('.product-id').val();
+    var quantity = $(this).closest('.product-row').find('.quantity').val();
+    var price = $(this).closest('.product-row').find('.price').val();
+
+    var productDetail = {
+        ProductID: productId,
+        Quantity: quantity,
+        Price: price,
+    };
+    saveProductDetails(productDetail);
+    calculateTotalPrice(productId);
+    });
 </script>

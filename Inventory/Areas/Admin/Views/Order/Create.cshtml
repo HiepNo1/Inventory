@@ -405,7 +405,7 @@
         var formattedTotalMoney = totalMoney.toLocaleString('vi-VN') + ' đ';
         document.getElementById("totalMoney").innerText = formattedTotalMoney;
     }
-    $(document).on('change', '.quantity', function () {
+    $(document).on('input', '.quantity', function () {
         calculateTotalAmount();
         totalPrice();
         totalMoney();

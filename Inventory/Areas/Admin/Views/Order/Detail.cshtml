@@ -1,14 +1,18 @@
 ﻿@model Model.ViewModels.OrderViewModel
-
+@using Inventory.Common
 @{
     ViewBag.Title = "Chi tiết đơn hàng";
     Layout = "~/Areas/Admin/Views/Shared/_Layouts.cshtml";
+    var credentials = Session[CommonConstants.SESSION_CREDENTIALS] as List<string>;
+    var userLogin = (UserLogin)Session[CommonConstants.USER_SESSION];
+    bool isAdmin = (userLogin.GroupID == "ADMIN") ? true : false;
 }
 
 
 @section header{
     Chi tiết đơn hàng
 }
+
 <div class="row">
     <div class="col-lg-12">
         <div class="panel panel-default">
@@ -16,9 +20,83 @@
                 <div class="row">
                     <div class="col-lg-12">
                         <div class="col-lg-6">
+                            @{
+                                if (Model.Status == 0)
+                                {
+                                    <h4 class="text-danger">ĐƠN HÀNG NÀY ĐÃ BỊ HỦY</h4>
+                                }
+                                else
+                                {                                    
+                                    <div class="progress-container">
+                                        <div class="progress-step">
+                                            <div class="progress-circle @if (Model.Status >= 1) { <text>active</text> }">
+                                                @if (Model.Status >= 1)
+                                                {
+                                                    <i class="fa fa-check" style="color : white"></i>
+                                                }
+                                                else
+                                                {
+                                                    <span class="step-label">1</span>
+                                                }
+                                            </div>
+                                            <span class="step-text">Đơn hàng mới</span>
+                                        </div>
+                                        <div class="progress-step">
+                                            <div class="progress-circle @if (Model.Status >= 2) { <text>active</text> }">
+                                                @if (Model.Status >= 2)
+                                                {
+                                                    <i class="fa fa-check" style="color : white"></i>
+                                                }
+                                                else
+                                                {
+                                                    <span class="step-label">2</span>
+                                                }
+                                            </div>
+                                            <span class="step-text">Đã xác nhận</span>
+                                        </div>
+                                        <div class="progress-step">
+                                            <div class="progress-circle @if (Model.Status >= 3) { <text>active</text> }">
+                                                @if (Model.Status >= 3)
+                                                {
+                                                    <i class="fa fa-check" style="color : white"></i>
+                                                }
+                                                else
+                                                {
+                                                    <span class="step-label">3</span>
+                                                }
+                                            </div>
+                                            <span class="step-text">Đang vận chuyển</span>
+                                        </div>
+                                        <div class="progress-step">
+                                            <div class="progress-circle @if (Model.Status >= 4) { <text>active</text> }">
+                                                @if (Model.Status >= 4)
+                                                {
+                                                    <i class="fa fa-check" style="color : white"></i>
+                                                }
+                                                else
+                                                {
+                                                    <span class="step-label">4</span>
+                                                }
+                                            </div>
+                                            <span class="step-text">Hoàn thành</span>
+                                        </div>
+                                        <!-- Connectors -->
+                                        <div class="progress-connector connector-1 @if (Model.Status >= 2) { <text>connector-active</text> }"></div>
+                                        <div class="progress-connector connector-2 @if (Model.Status >= 3) { <text>connector-active</text> }"></div>
+                                        <div class="progress-connector connector-3 @if (Model.Status >= 4) { <text>connector-active</text> }"></div>
+                                    </div>
+
+                                }
+                            }
 
                         </div>
+
                         <div class="col-lg-6 text-right">
+                            @if (Model.Status != 0)
+                            {
+                                <a href="@Url.Action("ExportPDF", "Order", new { id = Model.ID})" @(isAdmin || (credentials != null && credentials.Contains("ADD_EMPLOYEE")) ? "" : "disabled") class="btn btn-success"><i class="fa fa-print"></i> In hóa đơn</a>
+                            }
+
                             <a href="@Url.Action("Index", "Order")" class="btn btn-info"><i class="fa fa-backward"></i> Quay lại</a>
                         </div>
                     </div>
@@ -31,14 +109,14 @@
                     <div class="col-lg-12">
                         <div class="col-lg-5">
                             <h4>Đơn hàng</h4>
-                            <table class="table table-hover">
+                            <table class="table table-hover table-striped">
                                 <tr>
                                     <td>Số hóa đơn</td>
                                     <td>@Model.Code</td>
                                 </tr>
                                 <tr>
                                     <td>Ngày tạo</td>
-                                    <td>@Model.CreateDate</td>
+                                    <td>@Model.CreateDate.ToString("dd/MM/yyyy")</td>
                                 </tr>
                                 <tr>
                                     <td>Trạng thái</td>
@@ -80,6 +158,19 @@
                                         }
                                     </td>
                                 </tr>
+                                <tr>
+                                    <td>Ghi chú</td>
+                                    <td>
+                                        @{
+                                            if (Model.Description == null)
+                                            { <span>Không có ghi chú</span>}
+                                            else
+                                            {
+                                                <span>@Model.Description</span>
+                                            }
+                                        }
+                                    </td>
+                                </tr>
                             </table>
                         </div>
                         <div class="col-lg-7">
@@ -91,7 +182,7 @@
                                 </tr>
                                 <tr>
                                     <td>SĐT</td>
-                                    <td>@Model.CustomerPhone</td>
+                                    <td>@CommonConstants.FormatPhoneNum(Model.CustomerPhone)</td>
                                 </tr>
                                 <tr>
                                     <td>Email</td>
@@ -155,7 +246,7 @@
                                     <tr>
                                         <td colspan="4">
                                             @{
-                                                if (Model.Status == 1 || Model.Status == 2)
+                                                if (Model.Status == 1 || Model.Status == 2 && !Model.PaymentStatus)
                                                 {
                                                     <a href="@Url.Action("Destroy", "Order", new { id = Model.ID })" class="btn btn-danger"><i class="bi bi-cart-x"></i> Hủy</a>
                                                 }
@@ -218,3 +309,66 @@
         </div>
     </div>
 </div>
+<style>
+    .progress-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        position: relative;
+    }
+
+    .progress-step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .progress-circle {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background-color: #ddd;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+
+        .progress-circle.active {
+            background-color: dodgerblue;
+        }
+
+    .step-label {
+        color: white;
+    }
+
+    .step-text {
+        margin-top: 5px;
+    }
+
+    /* Đường nối */
+    .progress-connector {
+        position: absolute;
+        top: 11px;
+        height: 8px;
+        width: calc((100% / 3) - 50px);
+        background-color: #ddd;
+    }
+
+    .connector-1 {
+        left: calc(10%);
+    }
+
+    .connector-2 {
+        left: calc(35.6% + 15px);
+    }
+
+    .connector-3 {
+        left: calc(70.3% - 15px);
+    }
+
+    .connector-active {
+        background-color: dodgerblue;
+    }
+</style>

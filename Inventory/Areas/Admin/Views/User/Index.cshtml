@@ -57,9 +57,9 @@
                             {
                                 <tr>
                                     <td>@item.UserName</td>
-                                    <td>@item.CreateDate</td>      
+                                    <td>@item.CreateDate.ToString("dd/MM/yyyy")</td>      
                                     <td>@item.Name</td>      
-                                    <td>@item.Phone</td>      
+                                    <td>@CommonConstants.FormatPhoneNum(item.Phone)</td>      
                                     @{
                                         var userGroup = new InventoryDbContext().UserGroups.SingleOrDefault(x => x.ID == item.GroupID);
                                         string group = userGroup.Name;
@@ -75,11 +75,11 @@
                                             <a href="@Url.Action("Status", "User", new { id = item.ID})" @(isAdmin || (credentials != null && credentials.Contains("EDIT_USER")) ? "" : "disabled") class="btn btn-info" style="background-color:silver"><i class="fa fa-toggle-off"></i></a>
                                         }
                                     }
-                                    <a href="~/Admin/User/Edit/@item.ID" class="btn btn-primary"> <i class="bi bi-pencil"></i></a>
-                                    <a href="~/Admin/User/DeleTrash/@item.ID" class="btn btn-danger" onclick="return confirm('Thông tin khách hàng sẽ được đưa vào thùng rác ?');"><i class="bi bi-trash"></i></a>
+                                    <a href="~/Admin/User/Edit/@item.ID" @(isAdmin || (credentials != null && credentials.Contains("EDIT_USER")) ? "" : "disabled") class="btn btn-primary"> <i class="bi bi-pencil"></i></a>
+                                    <a href="~/Admin/User/DeleTrash/@item.ID" @(isAdmin || (credentials != null && credentials.Contains("DELETE_USER")) ? "" : "disabled") class="btn btn-danger" onclick="return confirm('Thông tin khách hàng sẽ được đưa vào thùng rác ?');"><i class="bi bi-trash"></i></a>
                                 </td>
                                     <td class="text-center">
-                                        @if(item.GroupID != "ADMIN") { 
+                                        @if(item.GroupID != "ADMIN" && item.GroupID != "CUSTOMER") { 
                                             <a href="@Url.Action("Permissions", "User", new { id = item.ID})">Phân quyền</a>
                                         }
                                     </td>

@@ -8,6 +8,8 @@ using Inventory.Common;
 using Model.EF;
 using Model.ViewModels;
 using System.IO;
+using iTextSharp.text;
+using iTextSharp.text.pdf;
 
 namespace Inventory.Areas.Admin.Controllers
 {
@@ -309,13 +311,18 @@ namespace Inventory.Areas.Admin.Controllers
                 var foundProducts = productDao.GetBySearch(searchProduct);
                 if (foundProducts != null && foundProducts.Any())
                 {
-                    List<Product> existingProducts = Session["SelectedProducts"] as List<Product> ?? new List<Product>();
+                    List<ProductDetailInOrder> existingProducts = Session["SelectedProducts"] as List<ProductDetailInOrder> ?? new List<ProductDetailInOrder>();
 
                     foreach (var product in foundProducts)
                     {
-                        if (!existingProducts.Any(p => p.ID == product.ID))
+                        if (!existingProducts.Any(p => p.ProductID == product.ID))
                         {
-                            existingProducts.Add(product);
+                            existingProducts.Add(new ProductDetailInOrder { 
+                                ProductID = product.ID,
+                                Quantity = 1,
+                                Price = product.Price * (100 - product.Sale)/100,
+                                TotalPrice = product.Price * (100 - product.Sale)/100
+                            });
                         }
                     }
 
@@ -333,7 +340,7 @@ namespace Inventory.Areas.Admin.Controllers
             {
                 TempData["messagePartial"] = new XMessage("danger", "Vui lòng nhập tên hoặc mã sản phẩm.");
             }
-            List<Product> currentProducts = Session["SelectedProducts"] as List<Product> ?? new List<Product>();
+            List<ProductDetailInOrder> currentProducts = Session["SelectedProducts"] as List<ProductDetailInOrder> ?? new List<ProductDetailInOrder>();
             orderViewModel.Products = currentProducts;
             return PartialView("_OrderDetail", orderViewModel);
         }
@@ -372,10 +379,10 @@ namespace Inventory.Areas.Admin.Controllers
         [HttpPost]
         public ActionResult DeleteProduct(int productId)
         {
-            List<Product> products = Session["SelectedProducts"] as List<Product>;
+            List<ProductDetailInOrder> products = Session["SelectedProducts"] as List<ProductDetailInOrder>;
             if (products != null)
             {
-                var productToRemove = products.FirstOrDefault(p => p.ID == productId);
+                var productToRemove = products.FirstOrDefault(p => p.ProductID == productId);
                 if (productToRemove != null)
                 {
                     products.Remove(productToRemove);
@@ -385,5 +392,103 @@ namespace Inventory.Areas.Admin.Controllers
             }
             return Json(new { success = false, message = "Failed to remove product from session." });
         }
+
+        [HttpPost]
+        public ActionResult SaveProductDetails(ProductDetailInOrder productDetail)
+        {
+            if (Session["SelectedProducts"] == null)
+            {
+                Session["SelectedProducts"] = new List<ProductDetailInOrder>();
+            }
+
+            var productDetails = (List<ProductDetailInOrder>)Session["SelectedProducts"];
+
+            var existingProductDetail = productDetails.FirstOrDefault(p => p.ProductID == productDetail.ProductID);
+
+            if (existingProductDetail != null)
+            {
+                existingProductDetail.Quantity = productDetail.Quantity;
+                existingProductDetail.Price = productDetail.Price;
+                existingProductDetail.TotalPrice = productDetail.Quantity * productDetail.Price;
+            }
+            else
+            {
+                productDetails.Add(productDetail);
+            }
+
+            return Json(new { success = true });
+        }
+
+        [HasCredential(RoleID = "PRINT_ORDER")]
+        public ActionResult ExportPDF(long id)
+        {
+            var order = orderDao.Detail(id);
+            MemoryStream memoryStream = new MemoryStream();
+            Document document = new Document();
+            PdfWriter.GetInstance(document, memoryStream);
+            document.Open();
+
+            BaseFont bf = BaseFont.CreateFont(@"C:\Windows\Fonts\arial.ttf", BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+            Font font = new Font(bf, 12);
+            Font boldFont = new Font(bf, 12, Font.BOLD);
+
+            document.Add(new Paragraph($"Mã hóa đơn: {order.Code}", font));
+            document.Add(new Paragraph($"Ngày tạo: {order.CreateDate.ToString("dd/MM/yyyy")}", font));
+
+            document.Add(new Paragraph(" "));
+            document.Add(new Paragraph($"Thông tin khách hàng", boldFont));
+            document.Add(new Paragraph($"Tên khách hàng: {order.CustomerName}", font));
+            document.Add(new Paragraph($"SĐT: {order.CustomerPhone}", font));
+            document.Add(new Paragraph($"Email: {order.CustomerEmail}", font));
+            document.Add(new Paragraph($"Địa chỉ nhận: {order.CustomerAddress}", font));
+            document.Add(new Paragraph($"Giới tính: {GetGenderText(order.Gender)}", font));
+
+            document.Add(new Paragraph(" "));
+            document.Add(new Paragraph($"Chi tiết hóa đơn", boldFont));
+            document.Add(new Paragraph(" "));
+            PdfPTable table = new PdfPTable(5);
+            float[] widths = new float[] { 36f, 17f, 15f, 15f, 17f };
+            table.SetWidths(widths);
+            table.AddCell(new PdfPCell(new Phrase("Sản phẩm", font)));
+            table.AddCell(new PdfPCell(new Phrase("Giá tiền", font)));
+            table.AddCell(new PdfPCell(new Phrase("Giảm giá", font)));
+            table.AddCell(new PdfPCell(new Phrase("Số lượng", font)));
+            table.AddCell(new PdfPCell(new Phrase("Tổng tiền", font)));
+            var orderDetails = orderDetailDao.GetList(id);
+            decimal totalMoney = 0;
+            foreach (var detail in orderDetails)
+            {
+                table.AddCell(new PdfPCell(new Phrase(detail.ProductName, font)));
+                table.AddCell(new PdfPCell(new Phrase(detail.ProductPrice.ToString("#,##0 đ"), font)));
+                table.AddCell(new PdfPCell(new Phrase(detail.Sale + "%", font)));
+                table.AddCell(new PdfPCell(new Phrase(detail.Quantity.ToString(), font)));
+                decimal total = detail.ProductPrice * (decimal)(1 - 0.01 * detail.Sale) * detail.Quantity;
+                table.AddCell(new PdfPCell(new Phrase(total.ToString("#,##0 đ"), font)));
+                totalMoney += total;
+            }
+            decimal totalAll = totalMoney + order.ShippingFee;
+            document.Add(table);
+
+            document.Add(new Paragraph(" "));
+            document.Add(new Paragraph($"Tổng tiền: {totalMoney.ToString("#,##0 đ")}", font));
+            document.Add(new Paragraph($"Phí vận chuyển: {order.ShippingFee.ToString("#,##0 đ")}", font));
+            document.Add(new Paragraph($"Thành tiền: {totalAll.ToString("#,##0 đ")}", font));
+            document.Close();
+            return File(memoryStream.ToArray(), "application/pdf", "Đơn hàng " + order.Code.ToString() + "__" + DateTime.Now.ToString() +".pdf");
+
+        }
+        private string GetGenderText(int? gender)
+        {
+            switch (gender)
+            {
+                case 0:
+                    return "Nữ";
+                case 1:
+                    return "Nam";
+                default:
+                    return "Không xác định";
+            }
+        }
+
     }
 }

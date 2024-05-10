@@ -36,7 +36,7 @@ namespace Model.Dao
                         CreateDate = a.CreateDate
                     });
         }
-        public IEnumerable<ReceiptViewModel> GetList(string catePage, string searchString, DateTime? createDate, int page, int pageSize)
+        public IEnumerable<ReceiptViewModel> GetList(string catePage, string searchString, bool? paymentStatus, DateTime? createDate, int page, int pageSize)
         {
             var receipt = inputOrder();
             if (catePage == "Trash")
@@ -50,11 +50,14 @@ namespace Model.Dao
             if (createDate != null)
             {
                 var createDateValue = createDate.Value.Date;
-                receipt = receipt.Where(x => x.CreateDate.Value.Day == createDateValue.Day
-                                          && x.CreateDate.Value.Month == createDateValue.Month
-                                          && x.CreateDate.Value.Year == createDateValue.Year);
+                receipt = receipt.Where(x => x.CreateDate.Day == createDateValue.Day
+                                          && x.CreateDate.Month == createDateValue.Month
+                                          && x.CreateDate.Year == createDateValue.Year);
             }
-            
+            if(paymentStatus != null)
+            {
+                receipt = receipt.Where(x => x.PaymentStatus == paymentStatus);
+            }
             return receipt.OrderByDescending(x => x.CreateDate).ToPagedList(page, pageSize);
         }
 

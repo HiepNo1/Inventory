@@ -29,6 +29,8 @@ namespace Model.Dao
                             ProductPrice = b.Price,
                             Sale = b.Sale,
                             Quantity = a.Quantity,
+                            Martial = b.Material,
+                            Color = b.Color,
                             ProductID = b.ID
                         };
             return model.Where(x => x.OrderID == orderID).ToList();

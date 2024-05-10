@@ -1,7 +1,9 @@
 ﻿@using Inventory.Common
-@{ var session = (UserLogin)Session[CommonConstants.USER_SESSION];
-    string userName = session.UserName;
-    long id = session.UserID; }
+@using Model.EF;
+@{ var userLogin = (UserLogin)Session[CommonConstants.USER_SESSION];
+    string userName = userLogin.UserName;
+    long id = userLogin.UserID;
+    var userInfo = new InventoryDbContext().Users.Find(id);}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -119,7 +121,7 @@
                     </a>
                     <ul class="dropdown-menu dropdown-user">
                         <li>
-                            <a href="~/Admin/User/Profile/@id"><i class="fa fa-user fa-fw"></i> User Profile</a>
+                            <a href="#" id="showUserInfo"><i class="fa fa-user fa-fw"></i> User Profile</a>
                         </li>
                         <li>
                             <a href="#"><i class="fa fa-gear fa-fw"></i> Settings</a>
@@ -133,7 +135,33 @@
             </ul>
             <!-- /.navbar-top-links -->
         </nav>
-
+        <div class="modal fade" id="usermodal" tabindex="-1" role="dialog" aria-labelledby="usermodallabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 class="modal-title text-center" id="usermodallabel">Thông tin Cá nhân</h3>
+                       
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label>Tên đăng nhập: </label> <span>@userInfo.UserName</span>
+                        </div>
+                        <div class="form-group">
+                            <label>Tên đầy đủ:</label> <span>@userInfo.Name</span>
+                        </div>
+                        <div class="form-group">
+                            <label>Số điện thoại:</label> <span>@CommonConstants.FormatPhoneNum(userInfo.Phone)</span>
+                        </div>                      
+                        <div class="form-group">
+                            <label>Nhóm người dùng:</label> <span>@{var groupName = new InventoryDbContext().UserGroups.SingleOrDefault(x => x.ID == userInfo.GroupID);}@groupName.Name</span>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                    </div>
+                </div>
+            </div>
+        </div>
         <aside class="sidebar navbar-default" role="navigation">
             <div class="sidebar-nav navbar-collapse">
                 <ul class="nav" id="side-menu">
@@ -251,6 +279,11 @@
     <!-- Custom Theme JavaScript -->
     <script src="~/assets/js/startmin.js"></script>
     <script src="~/assets/js/Plugin/ckeditor/ckeditor.js"></script>
+    <script>
+        $('#showUserInfo').click(function () {
+            $('#usermodal').modal('show');
+        });
+    </script>
     @RenderSection("CKEditor", required: false)
 </body>
 

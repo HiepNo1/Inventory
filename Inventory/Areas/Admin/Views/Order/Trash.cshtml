@@ -1,4 +1,4 @@
-﻿
+﻿@using Inventory.Common;
 @model PagedList.IPagedList<Model.ViewModels.OrderViewModel>
 @using PagedList.Mvc;
 @{
@@ -76,8 +76,8 @@
                                 <tr>
                                     <td>@item.Code</td>
                                     <td>@item.CustomerName</td>
-                                    <td>@item.CustomerPhone</td>
-                                    <td>@item.CreateDate</td>
+                                    <td>@CommonConstants.FormatPhoneNum(item.CustomerPhone)</td>
+                                    <td>@item.CreateDate.ToString("dd/MM/yyyy")</td>
                                     <td>
                                         @{
                                             if (item.Status == 0)

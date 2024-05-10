@@ -15,36 +15,37 @@
             <div class="panel panel-default">
                 <div class="panel-body">
                     <div class="col-lg-12" style="border: 1px solid #ccc;padding: 10px;">
-                        <div class="row">
-                            <div class="col-lg-2"></div>
-                            <div class="col-lg-2">
-                                <div class="form-group">
+                        <div class="container">
+                            <div class="row">
+                                <div class="col-lg-3">
                                     <div class="form-group">
-                                        <label for="startDate">Từ ngày</label>
-                                        <input type="date" class="form-control" id="startDate" name="startDate" value="@ViewBag.StartDate">
+                                        <div class="form-group">
+                                            <label for="startDate">Từ ngày</label>
+                                            <input type="date" class="form-control" id="startDate" name="startDate" value="@ViewBag.StartDate" onchange="loadChart()">
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="col-lg-2">
-                                <div class="form-group">
-                                    <label for="endDate">Đến ngày</label>
-                                    <input type="date" class="form-control" id="endDate" name="endDate" value="@ViewBag.EndDate">
-                                </div>
-                            </div>
-                            <div class="col-lg-2 text-justify">
-                                <div class="form-group">
-                                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Ngày</button>
-                                    <div class="dropdown-menu" id="dateDropdown">
-                                        <a class="dropdown-item" href="#" data-value="today" onclick="selectDate('today')">Ngày hôm nay</a>
-                                        <a class="dropdown-item" href="#" data-value="yesterday" onclick="selectDate('yesterday')">Ngày hôm qua</a>
-                                        <a class="dropdown-item" href="#" data-value="thisweek" onclick="selectDate('thisweek')">Tuần này</a>
-                                        <a class="dropdown-item" href="#" data-value="lastweek" onclick="selectDate('lastweek')">Tuần trước</a>
-                                        <a class="dropdown-item" href="#" data-value="thismonth" onclick="selectDate('thismonth')">Tháng này</a>
-                                        <a class="dropdown-item" href="#" data-value="lastmonth" onclick="selectDate('lastmonth')">Tháng trước</a>
-                                        <div class="dropdown-divider"></div>
+                                <div class="col-lg-3">
+                                    <div class="form-group">
+                                        <label for="endDate">Đến ngày</label>
+                                        <input type="date" class="form-control" id="endDate" name="endDate" value="@ViewBag.EndDate" onchange="loadChart()">
                                     </div>
                                 </div>
+                                <div class="col-lg-3" style="margin-top: 25px;">
+                                    <div class="form-group">
+                                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Ngày</button>
+                                        <div class="dropdown-menu" id="dateDropdown">
+                                            <a class="dropdown-item" href="#" data-value="today" onclick="selectDate('today')">Ngày hôm nay</a>
+                                            <a class="dropdown-item" href="#" data-value="yesterday" onclick="selectDate('yesterday')">Ngày hôm qua</a>
+                                            <a class="dropdown-item" href="#" data-value="thisweek" onclick="selectDate('thisweek')">Tuần này</a>
+                                            <a class="dropdown-item" href="#" data-value="lastweek" onclick="selectDate('lastweek')">Tuần trước</a>
+                                            <a class="dropdown-item" href="#" data-value="thismonth" onclick="selectDate('thismonth')">Tháng này</a>
+                                            <a class="dropdown-item" href="#" data-value="lastmonth" onclick="selectDate('lastmonth')">Tháng trước</a>
+                                            <div class="dropdown-divider"></div>
+                                        </div>
+                                    </div>
 
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -52,7 +53,6 @@
                         <div class="container">
                             <div class="row">
                                 <div class="col-md-6">
-                                    <h4>Doanh thu : <span id="orderRevenue">0</span></h4>
                                 </div>
                                 <div class="col-md-6 text-right">
                                     <a href="#" id="loadButton" onclick="loadChart()"><i class="fa fa-refresh" aria-hidden="true"></i></a>
@@ -67,25 +67,23 @@
 
                                 <div class="row">
                                     <div class="col-md-12">
-                                        <canvas id="orderChart" style="height: 300px;"></canvas>
+                                        <canvas id="productChart" style="height: 300px;"></canvas>
                                     </div>
                                 </div>
                             </div>
                             <div id="detailsSection" style="display:none">
-                                <a href="@Url.Action("ExportToExcel", "Statistics", new { startDate = ViewBag.StartDate, endDate = ViewBag.EndDate})">Xuất Excel</a>
+                                <a onclick="exportToExcel()" class="btn btn-success">Xuất Excel</a>
                                 <div class="row">
                                     <div class="col-md-12">
                                         <table class="table table-bordered">
                                             <thead>
                                                 <tr>
                                                     <th>STT</th>
-                                                    <th>Mã đơn hàng</th>
-                                                    <th>Tên khách hàng</th>
-                                                    <th>Số điện thoại</th>
-                                                    <th>Số sản phẩm</th>
-                                                    <th>Phí vận chuyển</th>
-                                                    <th>Ngày đặt hàng</th>
-                                                    <th>Doanh thu</th>
+                                                    <th>Tên sản phẩm</th>
+                                                    <th>Hình ảnh</th>
+                                                    <th>Giá tiền</th>
+                                                    <th>Số lượng bán ra</th>
+                                                    <th>Số lượng còn</th>
                                                 </tr>
                                             </thead>
                                             <tbody id="orderDetailsTableBody">
@@ -108,9 +106,34 @@
 
 <script>
     $("#showChartBtn").click(function () {
-        $("#chartSection").show();
-        $("#detailsSection").hide();
+        var startDate = $("#startDate").val();
+        var endDate = $("#endDate").val();
+        if (startDate === "" || endDate === "") {
+            alert('Chưa đủ dữ liệu');
+            return;
+        }
+        else {
+            $("#chartSection").show();
+            $("#detailsSection").hide();
+            loadChart();
+        }
+        
     });
+
+    $("#showDetailsBtn").click(function () {
+        var startDate = $("#startDate").val();
+        var endDate = $("#endDate").val();
+        if (startDate === "" || endDate === "") {
+            alert('Chưa đủ dữ liệu');
+            return;
+        }
+        else {
+            loadChart();
+            $('#detailsSection').show();
+            $("#chartSection").hide();
+        }      
+    });
+
     function parseJsonDate(jsonDate) {
         if (/\/Date\((-?\d+)\)\//.test(jsonDate)) {
             var milliseconds = parseInt(jsonDate.replace(/\/Date\((-?\d+)\)\//, '$1'));
@@ -119,56 +142,40 @@
         }
         return jsonDate;
     }
-    function loadOrderDetails() {
-        var startDate = document.getElementById("startDate").value;
-        var endDate = document.getElementById("endDate").value;
 
-        if (startDate === "" || endDate === "") {
-            alert('Chưa đủ dữ liệu');
-            return;
-        }
-
+    function loadOrderDetails(startDate, endDate) {
         $.ajax({
-            url: '/Admin/Statistics/OrderDetailsRevenueData',
+            url: '/Admin/Statistics/ProductDetailsData',
             type: "GET",
             dataType: "json",
             data: { startDate: startDate, endDate: endDate },
             success: function (response) {
-                var orders = response.orders;
+                var top10Products = response.top10Products;
                 var html = '';
 
-                for (var i = 0; i < orders.length; i++) {
+                for (var i = 0; i < top10Products.length; i++) {
                     html += '<tr>';
                     html += '<td>' + (i + 1) + '</td>';
-                    html += '<td>' + orders[i].OrderCode + '</td>';
-                    html += '<td>' + orders[i].CustomerName + '</td>';
-                    html += '<td>' + orders[i].CustomerPhone + '</td>';
-                    html += '<td>' + orders[i].ProductCount + '</td>';
-                    html += '<td>' + orders[i].ShippingFee.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' }) + '</td>';
-                    html += '<td>' + parseJsonDate(orders[i].OrderDate) + '</td>';
-                    html += '<td>' + orders[i].Revenue.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' }) + '</td>';
+                    html += '<td>' + top10Products[i].ProductName + '</td>';
+                    html += '<td><img src="' + top10Products[i].ProductImage + '" alt="Product Image" style="max-width:50px;"></td>';
+                    html += '<td>' + top10Products[i].ProductPrice.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' }) + '</td>';
+                    html += '<td>' + top10Products[i].Quantity + '</td>';
+                    html += '<td>' + top10Products[i].StockQuantity + '</td>';
                     html += '</tr>';
                 }
                 $('#orderDetailsTableBody').html(html);
             },
             error: function () {
-                alert("Đã xảy ra lỗi khi tải dữ liệu");
+                alert("Bạn chưa nhập đủ dữ liệu");
             }
         });
     }
 
-    $("#showDetailsBtn").click(function () {
-        loadOrderDetails();
-        $('#detailsSection').show();
-        $("#chartSection").hide();
-
-    });
     function formatDate(date) {
-        var d = new Date(date);
-        var year = d.getFullYear();
-        var month = ('0' + (d.getMonth() + 1)).slice(-2);
-        var day = ('0' + d.getDate()).slice(-2);
-        return year + '-' + month + '-' + day;
+        var day = ("0" + date.getDate()).slice(-2);
+        var month = ("0" + (date.getMonth() + 1)).slice(-2);
+        var year = date.getFullYear();
+        return year + "-" + month + "-" + day;
     }
 
     var startDateValue = "";
@@ -217,86 +224,71 @@
                 break;
         }
 
-        document.getElementById("startDate").value = startDateValue;
-        document.getElementById("endDate").value = endDateValue;
+        $("#startDate").val(startDateValue);
+        $("#endDate").val(endDateValue);
     }
 
-    function formatDate(date) {
-        var day = ("0" + date.getDate()).slice(-2);
-        var month = ("0" + (date.getMonth() + 1)).slice(-2);
-        var year = date.getFullYear();
-        return year + "-" + month + "-" + day;
-    }
-    var isFirstLoad = true;
-    $(document).ready(function () {
-        var ctx = document.getElementById('orderChart').getContext('2d');
-        var chart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: [],
-                datasets: [{
-                    label: 'Doanh thu',
-                    data: [],
-                    borderColor: 'rgba(255, 99, 132, 1)',
-                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                    borderWidth: 2
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    xAxes: [{
-                        type: 'time',
-                        time: {
-                            unit: 'day'
-                        }
-                    }],
-                    yAxes: [{
-                        ticks: {
-                            beginAtZero: true
-                        }
-                    }]
-                }
-            }
-        });
-        $("#loadButton").click(function () {
-            if (isFirstLoad) {
-                loadChart();
-                isFirstLoad = false;
-            }
-        });
-    });
-
-    function updateChart(dates, orderRevenues) {
-        var chart = Chart.getChart("orderChart");
-        chart.data.labels = dates;
-        chart.data.datasets[0].data = orderRevenues;
-        chart.update();
-        var totalOrderRevenue = orderRevenues.reduce((a, b) => a + b, 0);
-        document.getElementById("orderRevenue").textContent = totalOrderRevenue.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
-    }
-
+    
+    var myChart;
     function loadChart() {
-        var startDate = document.getElementById("startDate").value;
-        var endDate = document.getElementById("endDate").value;
-        if (startDate === "" || endDate === "") {
-            alert('Chưa đủ dữ liệu');
-            return;
-        }
-
+        var startDate = $("#startDate").val();
+        var endDate = $("#endDate").val();
+        $("#loadButton").html('<i class="fa fa-spinner fa-spin"></i>');
         $.ajax({
-            url: '/Admin/Statistics/OrderRevenueData',
+            url: '/Admin/Statistics/ProductQuantityData',
             type: "GET",
             dataType: "json",
             data: { startDate: startDate, endDate: endDate },
             success: function (response) {
-                updateChart(response.dates, response.orderRevenues);
-                loadOrderDetails();
-            },
-            error: function () {
-                alert("Đã xảy ra lỗi khi tải dữ liệu");
+                var productNames = response.productNames;
+                var quantities = response.productQuantities;
+                loadOrderDetails(startDate, endDate);
+                var ctx = document.getElementById('productChart').getContext('2d');
+                if (window.myChart !== undefined) {
+                    window.myChart.destroy();
+                }
+                window.myChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: productNames,
+                        datasets: [{
+                            label: 'Số lượng sản phẩm',
+                            data: quantities,
+                            backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            xAxes: [{
+                                ticks: {
+                                    autoSkip: false
+                                }
+                            }],
+                            yAxes: [{
+                                ticks: {
+                                    beginAtZero: true
+                                }
+                            }]
+                        }
+                    }
+                });
+                $("#loadButton").html('<i class="fa fa-refresh" aria-hidden="true"></i>');
             }
         });
+    }
+
+    $(document).ready(function () {
+
+    });
+    function exportToExcel() {
+        var startDate = document.getElementById("startDate").value;
+        var endDate = document.getElementById("endDate").value;
+        var exportUrl = '@Url.Action("ExportProductToExcel", "Statistics")';
+        exportUrl += '?startDate=' + startDate + '&endDate=' + endDate;
+        window.location.href = exportUrl;
     }
 </script>

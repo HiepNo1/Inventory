@@ -31,7 +31,7 @@
         [StringLength(50)]
         [Display(Name = "Tên đầy đủ")]
         public string Name { get; set; }
-        public DateTime? CreateDate { get; set; }
+        public DateTime CreateDate { get; set; }
 
         [StringLength(50)]
         public string CreateBy { get; set; }

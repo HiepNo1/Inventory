@@ -37,16 +37,17 @@ namespace Inventory.Areas.Admin.Controllers
                 long id = dao.Insert(employee);
                 if (id == 0)
                 {
-                    ModelState.AddModelError("", "Nhân viên này đã tồn tại");
+                    TempData["message"] = new XMessage("danger", "Nhân viên đã tồn tại");
                     return View(employee);
                 }
                 if (id > 0)
                 {
+                    TempData["message"] = new XMessage("success", "Thêm thành công");
                     return RedirectToAction("Index");
                 }
                 else
                 {
-                    ModelState.AddModelError("", "Thêm không thành công");
+                    TempData["message"] = new XMessage("danger", "Thêm không thành công");
                 }
             }
             return View(employee);
@@ -69,11 +70,13 @@ namespace Inventory.Areas.Admin.Controllers
                 bool result = dao.Update(employee);
                 if (result)
                 {
+                    TempData["message"] = new XMessage("success", "Sửa thành công");
+
                     return RedirectToAction("Index");
                 }
                 else
                 {
-                    ModelState.AddModelError("", "Sửa không thành công");
+                    TempData["message"] = new XMessage("danger", "Sửa không thành công");
                 }
             }
             return View(employee);
@@ -83,6 +86,7 @@ namespace Inventory.Areas.Admin.Controllers
         public ActionResult Delete(long Id)
         {
             new EmployeeDao().Delete(Id);
+            TempData["message"] = new XMessage("success", "Xóa thành công");
             return RedirectToAction("Index");
         }
 
