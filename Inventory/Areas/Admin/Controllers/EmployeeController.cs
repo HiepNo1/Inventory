@@ -12,6 +12,7 @@ namespace Inventory.Areas.Admin.Controllers
     [ClearSessions("SelectedProducts", "SelectedReceipts")]
     public class EmployeeController : BaseController
     {
+        private InventoryDbContext db = new InventoryDbContext();
         [HasCredential(RoleID = "VIEW_EMPLOYEE")]
         public ActionResult Index(string searchString, int page = 1, int pageSize = 10)
         {
@@ -70,6 +71,12 @@ namespace Inventory.Areas.Admin.Controllers
                 bool result = dao.Update(employee);
                 if (result)
                 {
+                    var user = db.Users.Find(employee.UserID);
+                    if(user != null)
+                    {                     
+                        user.ModifieBy = GetUserSession().UserName;
+                        new UserDao().UpdateByUserID(employee);
+                    }                   
                     TempData["message"] = new XMessage("success", "Sửa thành công");
 
                     return RedirectToAction("Index");

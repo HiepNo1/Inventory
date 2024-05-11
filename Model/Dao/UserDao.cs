@@ -54,6 +54,16 @@ namespace Model.Dao
                 return true;
             }           
         }
+
+        public void UpdateByUserID(Employee employee)
+        {
+            var user = db.Users.Find(employee.UserID);
+            user.Name = employee.Name;
+            user.Phone = employee.Phone;
+            user.ModifieDate = DateTime.Now;            
+            db.SaveChanges();
+        }
+       
         public long Insert(User user)
         {
             var exist = db.Users.SingleOrDefault(x => x.UserName == user.UserName);

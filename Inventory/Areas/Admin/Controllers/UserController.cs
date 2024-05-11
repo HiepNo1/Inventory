@@ -83,6 +83,12 @@ namespace Inventory.Areas.Admin.Controllers
                 var result = userDao.Update(user);
                 if (result)
                 {
+                    var employee = db.Employees.SingleOrDefault(x => x.UserID == user.ID);
+                    employee.Name = user.Name;
+                    employee.ModifieDate = DateTime.Now;
+                    employee.ModifieBy = GetUserSession().UserName;
+                    employee.Phone = user.Phone;
+                    db.SaveChanges();
                     TempData["message"] = new XMessage("success", "Sửa tài khoản thành công");
                     return RedirectToAction("Index");
                 }

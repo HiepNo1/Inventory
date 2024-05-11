@@ -151,7 +151,6 @@
         var fileName = input.files[0].name;
         document.getElementById("imageFileName").value = fileName;
 
-        // Hiển thị xem trước hình ảnh
         var reader = new FileReader();
         reader.onload = function (e) {
             document.getElementById("imagePreview").src = e.target.result;
