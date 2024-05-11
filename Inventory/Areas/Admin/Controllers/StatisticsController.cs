@@ -61,23 +61,7 @@ namespace Inventory.Areas.Admin.Controllers
         {
             try
             {
-                var endOfDay = endDate.AddDays(1).AddSeconds(-1);
-                var orders = (from o in db.Orders
-                              join c in db.Customers on o.CustomerID equals c.ID
-                              where o.CreateDate >= startDate && o.CreateDate <= endOfDay && (orderType == null || o.Status == orderType)
-                              select new
-                              {
-                                  OrderCode = o.Code,
-                                  CustomerName = c.Name,
-                                  CustomerPhone = c.Phone,
-                                  ProductCount = (from od in db.OrderDetails where od.OrderID == o.ID select od.Quantity).Sum(),
-                                  ShippingFee = o.ShippingFee,
-                                  OrderDate = o.CreateDate,
-                                  Revenue = (from od in db.OrderDetails
-                                             join p in db.Products on od.ProductID equals p.ID
-                                             where od.OrderID == o.ID
-                                             select od.Quantity * p.Price).Sum() + o.ShippingFee
-                              }).ToList();
+                var orders = LstOrder(startDate, endDate, orderType);
                 return Json(new { orders }, JsonRequestBehavior.AllowGet);
             }
             catch (Exception ex)
@@ -90,7 +74,6 @@ namespace Inventory.Areas.Admin.Controllers
         {
             try
             {
-                var endOfDay = endDate.AddDays(1).AddSeconds(-1);
                 string orderTypeName = "";
                 if (orderType == null)
                 {
@@ -121,23 +104,7 @@ namespace Inventory.Areas.Admin.Controllers
                     }
                 }
 
-                var orders = (from o in db.Orders
-                              join c in db.Customers on o.CustomerID equals c.ID
-                              where o.CreateDate >= startDate && o.CreateDate <= endOfDay && (orderType == null || o.Status == orderType)
-                              select new
-                              {
-                                  OrderCode = o.Code,
-                                  CustomerName = c.Name,
-                                  CustomerPhone = c.Phone,
-                                  ProductCount = (from od in db.OrderDetails where od.OrderID == o.ID select od.Quantity).Sum(),
-                                  ShippingFee = o.ShippingFee,
-                                  OrderDate = o.CreateDate,
-                                  Revenue = (from od in db.OrderDetails
-                                             join p in db.Products on od.ProductID equals p.ID
-                                             where od.OrderID == o.ID
-                                             select od.Quantity * p.Price).Sum() + o.ShippingFee
-                              }).ToList();
-
+                var orders = LstOrder(startDate, endDate, orderType);
                 IWorkbook workbook = new XSSFWorkbook();
                 ISheet sheet = workbook.CreateSheet("Orders");
                 int rownum = 0;
@@ -207,24 +174,7 @@ namespace Inventory.Areas.Admin.Controllers
         {
             List<string> dates = new List<string>();
             List<decimal> orderRevenues = new List<decimal>();
-            var endOfDay = endDate.AddDays(1).AddSeconds(-1);
-            var orders = (from o in db.Orders
-                          join c in db.Customers on o.CustomerID equals c.ID
-                          where o.CreateDate >= startDate && o.CreateDate <= endOfDay && o.Status == 4
-                          select new
-                          {
-                              OrderCode = o.Code,
-                              CustomerName = c.Name,
-                              CustomerPhone = c.Phone,
-                              ProductCount = (from od in db.OrderDetails where od.OrderID == o.ID select od.Quantity).Sum(),
-                              ShippingFee = o.ShippingFee,
-                              OrderDate = o.CreateDate,
-                              Revenue = (from od in db.OrderDetails
-                                         join p in db.Products on od.ProductID equals p.ID
-                                         where od.OrderID == o.ID
-                                         select od.Quantity * p.Price).Sum() + o.ShippingFee
-                          }).ToList();
-
+            var orders = LstOrder(startDate, endDate, 4);
             var orderData = orders
                             .GroupBy(x => x.OrderDate)
                             .Select(g => new { Date = g.Key, OrderRevenues = g.Sum(o => o.Revenue) })
@@ -243,23 +193,7 @@ namespace Inventory.Areas.Admin.Controllers
         {
             try
             {
-                var endOfDay = endDate.AddDays(1).AddSeconds(-1);
-                var orders = (from o in db.Orders
-                              join c in db.Customers on o.CustomerID equals c.ID
-                              where o.CreateDate >= startDate && o.CreateDate <= endOfDay && o.Status == 4
-                              select new
-                              {
-                                  OrderCode = o.Code,
-                                  CustomerName = c.Name,
-                                  CustomerPhone = c.Phone,
-                                  ProductCount = (from od in db.OrderDetails where od.OrderID == o.ID select od.Quantity).Sum(),
-                                  ShippingFee = o.ShippingFee,
-                                  OrderDate = o.CreateDate,
-                                  Revenue = (from od in db.OrderDetails
-                                             join p in db.Products on od.ProductID equals p.ID
-                                             where od.OrderID == o.ID
-                                             select od.Quantity * p.Price).Sum() + o.ShippingFee
-                              }).ToList();
+                var orders = LstOrder(startDate, endDate, 4);
                 return Json(new { orders }, JsonRequestBehavior.AllowGet);
             }
             catch (Exception ex)
@@ -271,24 +205,7 @@ namespace Inventory.Areas.Admin.Controllers
         {
             try
             {
-                var endOfDay = endDate.AddDays(1).AddSeconds(-1);
-                var orders = (from o in db.Orders
-                              join c in db.Customers on o.CustomerID equals c.ID
-                              where o.CreateDate >= startDate && o.CreateDate <= endOfDay
-                              select new
-                              {
-                                  OrderCode = o.Code,
-                                  CustomerName = c.Name,
-                                  CustomerPhone = c.Phone,
-                                  ProductCount = (from od in db.OrderDetails where od.OrderID == o.ID select od.Quantity).Sum(),
-                                  ShippingFee = o.ShippingFee,
-                                  OrderDate = o.CreateDate,
-                                  Revenue = (from od in db.OrderDetails
-                                             join p in db.Products on od.ProductID equals p.ID
-                                             where od.OrderID == o.ID
-                                             select od.Quantity * p.Price).Sum() + o.ShippingFee
-                              }).ToList();
-
+                var orders = LstOrder(startDate, endDate, 4);
                 IWorkbook workbook = new XSSFWorkbook();
                 ISheet sheet = workbook.CreateSheet("Orders");
                 int rownum = 0;
@@ -353,23 +270,7 @@ namespace Inventory.Areas.Admin.Controllers
         {
             try
             {
-                var endOfDay = endDate.AddDays(1).AddSeconds(-1);
-                var top10Products = (from od in db.OrderDetails
-                                     join o in db.Orders on od.OrderID equals o.ID
-                                     join p in db.Products on od.ProductID equals p.ID
-                                     where o.CreateDate >= startDate && o.CreateDate <= endOfDay
-                                     group new { od, p } by new { p.ID, p.Name, p.Image, p.Quantity, p.Price } into g
-                                     orderby g.Sum(x => x.od.Quantity) descending
-                                     select new
-                                     {
-                                         ProductID = g.Key.ID,
-                                         ProductName = g.Key.Name,
-                                         ProductImage = g.Key.Image,
-                                         ProductPrice = g.Key.Price,
-                                         StockQuantity = g.Key.Quantity,
-                                         Quantity = g.Sum(x => x.od.Quantity)
-                                     }).Take(10).ToList();
-
+                var top10Products = LstProduct(startDate, endDate);               
                 var productNames = top10Products.Select(x => x.ProductName).ToList();
                 var quantities = top10Products.Select(x => x.Quantity).ToList();
 
@@ -385,22 +286,7 @@ namespace Inventory.Areas.Admin.Controllers
         {
             try
             {
-                var endOfDay = endDate.AddDays(1).AddSeconds(-1);
-                var top10Products = (from od in db.OrderDetails
-                                     join o in db.Orders on od.OrderID equals o.ID
-                                     join p in db.Products on od.ProductID equals p.ID
-                                     where o.CreateDate >= startDate && o.CreateDate <= endOfDay
-                                     group new { od, p } by new { p.ID, p.Name, p.Image, p.Quantity, p.Price } into g
-                                     orderby g.Sum(x => x.od.Quantity) descending
-                                     select new
-                                     {
-                                         ProductID = g.Key.ID,
-                                         ProductName = g.Key.Name,
-                                         ProductImage = g.Key.Image,
-                                         ProductPrice = g.Key.Price,
-                                         StockQuantity = g.Key.Quantity,
-                                         Quantity = g.Sum(x => x.od.Quantity)
-                                     }).Take(10).ToList();
+                var top10Products = LstProduct(startDate, endDate);
                 return Json(new { top10Products }, JsonRequestBehavior.AllowGet);
             }
             catch (Exception ex)
@@ -412,23 +298,7 @@ namespace Inventory.Areas.Admin.Controllers
         {
             try
             {
-                var endOfDay = endDate.AddDays(1).AddSeconds(-1);
-                var top10Products = (from od in db.OrderDetails
-                                     join o in db.Orders on od.OrderID equals o.ID
-                                     join p in db.Products on od.ProductID equals p.ID
-                                     where o.CreateDate >= startDate && o.CreateDate <= endOfDay
-                                     group new { od, p } by new { p.ID, p.Name, p.Image, p.Quantity, p.Price } into g
-                                     orderby g.Sum(x => x.od.Quantity) descending
-                                     select new
-                                     {
-                                         ProductID = g.Key.ID,
-                                         ProductName = g.Key.Name,
-                                         ProductImage = g.Key.Image,
-                                         ProductPrice = g.Key.Price,
-                                         StockQuantity = g.Key.Quantity,
-                                         Quantity = g.Sum(x => x.od.Quantity)
-                                     }).Take(10).ToList();
-
+                var top10Products = LstProduct(startDate, endDate);
                 IWorkbook workbook = new XSSFWorkbook();
                 ISheet sheet = workbook.CreateSheet("Products");
                 int rownum = 0;
@@ -472,6 +342,46 @@ namespace Inventory.Areas.Admin.Controllers
                 ViewBag.Error = ex.Message;
                 return View("Error");
             }
+        }
+        public List<ProductInStatistics> LstProduct(DateTime startDate, DateTime endDate)
+        {
+            var endOfDay = endDate.AddDays(1).AddSeconds(-1);
+            return (from od in db.OrderDetails
+                                 join o in db.Orders on od.OrderID equals o.ID
+                                 join p in db.Products on od.ProductID equals p.ID
+                                 where o.CreateDate >= startDate && o.CreateDate <= endOfDay
+                                 group new { od, p } by new { p.ID, p.Name, p.Image, p.Quantity, p.Price } into g
+                                 orderby g.Sum(x => x.od.Quantity) descending
+                                 select new ProductInStatistics()
+                                 {
+                                     ProductID = g.Key.ID,
+                                     ProductName = g.Key.Name,
+                                     ProductImage = g.Key.Image,
+                                     ProductPrice = g.Key.Price,
+                                     StockQuantity = g.Key.Quantity,
+                                     Quantity = g.Sum(x => x.od.Quantity)
+                                 }).Take(10).ToList();
+        }
+
+        public List<OrderInStatistics> LstOrder(DateTime startDate, DateTime endDate, int? orderType)
+        {
+            var endOfDay = endDate.AddDays(1).AddSeconds(-1);
+            return (from o in db.Orders
+                          join c in db.Customers on o.CustomerID equals c.ID
+                          where o.CreateDate >= startDate && o.CreateDate <= endOfDay && (orderType == null || o.Status == orderType)
+                          select new OrderInStatistics()
+                          {
+                              OrderCode = o.Code,
+                              CustomerName = c.Name,
+                              CustomerPhone = c.Phone,
+                              ProductCount = (from od in db.OrderDetails where od.OrderID == o.ID select od.Quantity).Sum(),
+                              ShippingFee = o.ShippingFee,
+                              OrderDate = o.CreateDate,
+                              Revenue = (from od in db.OrderDetails
+                                         join p in db.Products on od.ProductID equals p.ID
+                                         where od.OrderID == o.ID
+                                         select od.Quantity * p.Price).Sum() + o.ShippingFee
+                          }).ToList();
         }
     }
 }

@@ -152,12 +152,14 @@
     <Compile Include="ViewModels\CreateOrderViewModel.cs" />
     <Compile Include="ViewModels\CreateReceiptViewModel.cs" />
     <Compile Include="ViewModels\OrderDetailViewModel.cs" />
+    <Compile Include="ViewModels\OrderInStatistics.cs" />
     <Compile Include="ViewModels\OrderStatisticsViewModel.cs" />
     <Compile Include="ViewModels\OrderStatistic.cs" />
     <Compile Include="ViewModels\OrderViewModel.cs" />
     <Compile Include="ViewModels\PermissionViewModel.cs" />
     <Compile Include="ViewModels\ProductDetailInOrder.cs" />
     <Compile Include="ViewModels\ProductDetailInReceipt.cs" />
+    <Compile Include="ViewModels\ProductInStatistics.cs" />
     <Compile Include="ViewModels\ProductViewModel.cs" />
     <Compile Include="ViewModels\ReceiptDetailViewModel.cs" />
     <Compile Include="ViewModels\ReceiptViewModel.cs" />
