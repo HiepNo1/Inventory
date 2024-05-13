@@ -10,7 +10,6 @@ using Inventory.Common;
 
 namespace Inventory.Areas.Admin.Controllers
 {
-    [ClearSessions("SelectedProducts", "SelectedReceipts")]
     public class SupplierController : BaseController
     {
         private SupplierDao supplierDao = new SupplierDao();

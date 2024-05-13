@@ -15,7 +15,6 @@ using NPOI.SS.Util;
 
 namespace Inventory.Areas.Admin.Controllers
 {
-    [ClearSessions("SelectedProducts", "SelectedReceipts")]
     public class StatisticsController : BaseController
     {
         private InventoryDbContext db = new InventoryDbContext();

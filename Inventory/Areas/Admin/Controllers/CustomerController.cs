@@ -9,7 +9,6 @@ using Inventory.Common;
 
 namespace Inventory.Areas.Admin.Controllers
 {
-    [ClearSessions("SelectedProducts", "SelectedReceipts")]
     public class CustomerController : BaseController
     {
         // GET: Admin/Customer

@@ -9,7 +9,6 @@ using System.Web.Mvc;
 
 namespace Inventory.Areas.Admin.Controllers
 {
-    [ClearSessions("SelectedProducts", "SelectedReceipts")]
     public class RoleController : BaseController
     {
         // GET: Admin/Role

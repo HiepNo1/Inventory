@@ -24,7 +24,6 @@ namespace Inventory.Areas.Admin.Controllers
 
         protected UserLogin GetUserSession()
         {
-            // Lấy thông tin người dùng đang đăng nhập từ session
             var userSession = Session[CommonConstants.USER_SESSION] as UserLogin;
             return userSession;
         }

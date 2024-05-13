@@ -12,7 +12,6 @@ using System.Diagnostics;
 
 namespace Inventory.Areas.Admin.Controllers
 {
-    [ClearSessions("SelectedProducts", "SelectedReceipts")]
     public class UserController : BaseController
     {
         private UserDao userDao = new UserDao();

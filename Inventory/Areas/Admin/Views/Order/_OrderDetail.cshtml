@@ -44,7 +44,7 @@
 
                     <td style="vertical-align: middle;">
                         <input type="hidden" class="product-id" value="@product.ID" />
-                        <input type="number" id="quantity_@product.ID" style="width: 80px;" class="quantity form-control" name="quantity_@product.ID" value="@detail.Quantity" min="1" max="@product.Quantity" onchange="calculateTotalPrice(@product.ID)" />
+                        <input type="number" id="quantity_@product.ID" style="width: 80px;" class="quantity form-control" name="quantity_@product.ID" value="@detail.Quantity" min="1" max="@product.Quantity" oninput="calculateTotalPriceWithCheck(@product.ID, this)" />
                     </td>
                     <td style="vertical-align: middle;" id="totalPrice_@product.ID" class="totalPrice">
                         @detail.TotalPrice.ToString("#,##0 đ")
@@ -102,7 +102,16 @@ else
             });
         }
     };
+    function calculateTotalPriceWithCheck(productId, input) {
+        var maxQuantity = parseInt(input.getAttribute('max'));
+        var enteredValue = parseInt(input.value);
 
+        if (enteredValue > maxQuantity) {
+            input.value = maxQuantity;
+            alert("Số lượng vượt quá giới hạn cho phép (" + maxQuantity + ")");      
+            calculateTotalPrice(productId);
+        }
+    }
     function calculateTotalPrice(productId) {
         var quantity = parseInt(document.getElementById("quantity_" + productId).value);
         var price = parseFloat(document.getElementById("price_" + productId).innerText.replace(/[^0-9.-]+/g, ""));

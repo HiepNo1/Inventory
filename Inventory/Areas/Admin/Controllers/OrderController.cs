@@ -13,7 +13,6 @@ using iTextSharp.text.pdf;
 
 namespace Inventory.Areas.Admin.Controllers
 {
-    [ClearSessions("SelectedReceipts")]
     public class OrderController : BaseController
     {
         // GET: Admin/Order
@@ -23,7 +22,6 @@ namespace Inventory.Areas.Admin.Controllers
         private ProductDao productDao = new ProductDao();
         private CustomerDao customerDao = new CustomerDao();
 
-        [ClearSessions("SelectedProducts")]
         [HasCredential(RoleID = "VIEW_ORDER")]
         public ActionResult Index(string searchString, DateTime? createDate, int? status, int page = 1, int pageSize = 10)
         {
@@ -33,7 +31,6 @@ namespace Inventory.Areas.Admin.Controllers
             ViewBag.status = status;
             return View(model);
         }
-        [ClearSessions("SelectedProducts")]
         [HasCredential(RoleID = "VIEW_ORDER")]
         public ActionResult Trash(string searchString, DateTime? createDate, int? status, int page = 1, int pageSize = 10)
         {
@@ -43,7 +40,6 @@ namespace Inventory.Areas.Admin.Controllers
             ViewBag.status = status;
             return View(model);
         }
-        [ClearSessions("SelectedProducts")]
         [HasCredential(RoleID = "DETAIL_ORDER")]
         public ActionResult Detail(long id)
         {
@@ -52,7 +48,6 @@ namespace Inventory.Areas.Admin.Controllers
             return View(detail);
         }
 
-        [ClearSessions("SelectedProducts")]
         [HasCredential(RoleID = "DETAIL_ORDER")]
         public ActionResult TrashDetail(long id)
         {
@@ -210,6 +205,7 @@ namespace Inventory.Areas.Admin.Controllers
         [HttpGet]
         public ActionResult Create(string searchCustomer, string searchProduct)
         {
+            Session.Remove("SelectedProducts");
             CreateOrderViewModel orderViewModel = new CreateOrderViewModel();
             orderViewModel.SearchProduct = searchProduct;
             orderViewModel.SearchCustomer = searchCustomer;

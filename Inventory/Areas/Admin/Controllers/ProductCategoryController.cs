@@ -10,7 +10,6 @@ using PagedList;
 
 namespace Inventory.Areas.Admin.Controllers
 {
-    [ClearSessions("SelectedProducts", "SelectedReceipts")]
     public class ProductCategoryController : BaseController
     {
         // GET: Admin/ProductCategory

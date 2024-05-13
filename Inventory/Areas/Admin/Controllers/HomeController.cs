@@ -6,7 +6,6 @@ using System.Web.Mvc;
 
 namespace Inventory.Areas.Admin.Controllers
 {
-    [ClearSessions("SelectedProducts", "SelectedReceipts")]
     public class HomeController : BaseController
     {
         // GET: Admin/Home

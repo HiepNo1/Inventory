@@ -12,7 +12,6 @@ using PagedList;
 
 namespace Inventory.Areas.Admin.Controllers
 {
-    [ClearSessions("SelectedProducts")]
     public class ReceiptController : BaseController
     {
         private InventoryDbContext db = new InventoryDbContext();
@@ -21,7 +20,6 @@ namespace Inventory.Areas.Admin.Controllers
         private SupplierDao supplierDao = new SupplierDao();
         private ProductDao productDao = new ProductDao();
         // GET: Admin/Receipt
-        [ClearSessions("SelectedReceipts")]
         [HasCredential(RoleID = "VIEW_RECEIPT")]
         public ActionResult Index(string searchString, bool? paymentStatus, DateTime? createDate, int page = 1, int pageSize = 5)
         {
@@ -31,7 +29,6 @@ namespace Inventory.Areas.Admin.Controllers
             ViewBag.PaymentStatus = paymentStatus;
             return View(receipt);
         }
-        [ClearSessions("SelectedReceipts")]
         [HasCredential(RoleID = "DETAIL_RECEIPT")]
         public ActionResult Detail(long id)
         {
@@ -44,6 +41,7 @@ namespace Inventory.Areas.Admin.Controllers
         [HttpGet]
         public ActionResult Create(string searchSupplier, string searchProduct)
         {
+            Session.Remove("SelectedReceipts");
             CreateReceiptViewModel receiptViewModel = new CreateReceiptViewModel();
             receiptViewModel.SearchProduct = searchProduct;
             receiptViewModel.SearchSupplier = searchSupplier;

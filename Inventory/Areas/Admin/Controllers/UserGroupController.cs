@@ -8,7 +8,6 @@ using Model.EF;
 
 namespace Inventory.Areas.Admin.Controllers
 {
-    [ClearSessions("SelectedProducts", "SelectedReceipts")]
     public class UserGroupController : BaseController
     {
         // GET: Admin/UserGroup

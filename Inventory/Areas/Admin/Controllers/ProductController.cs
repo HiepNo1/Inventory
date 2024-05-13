@@ -13,7 +13,6 @@ using PagedList;
 
 namespace Inventory.Areas.Admin.Controllers
 {
-    [ClearSessions("SelectedProducts", "SelectedReceipts")]
     public class ProductController : BaseController
     {
         private ProductDao productDao = new ProductDao();
