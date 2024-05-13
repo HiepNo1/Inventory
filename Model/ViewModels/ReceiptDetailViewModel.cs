@@ -10,6 +10,8 @@ namespace Model.ViewModels
     {
         public long ID { get; set; }
         public string ProductName { get; set; }
+        public string ProductMarterial { get; set; }
+        public string ProductColor { get; set; }
         public string ProductImage { get; set; }
         public decimal ImportPrice { get; set; }
         public int Quantity { get; set; }

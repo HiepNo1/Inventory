@@ -28,7 +28,9 @@ namespace Model.Dao
                             ProductImage = b.Image,
                             ImportPrice = a.ImportPrice,                          
                             Quantity = a.Quantity,
-                            ProductID = b.ID
+                            ProductID = b.ID,
+                            ProductColor = b.Color,
+                            ProductMarterial = b.Material
                         };
             return model.Where(x => x.ReceiptID == receiptID).ToList();
         }

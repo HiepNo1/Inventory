@@ -59,7 +59,7 @@
                                     @Html.Partial("_ReceiptDetail", Model.Products)
                                 </div>
                             </div>
-                                <div style="border-radius: 10px; border: 2px solid #ccc; margin: 10px -10px; padding: 10px;">
+                            <div style="border-radius: 10px; border: 2px solid #ccc; margin: 10px -10px; padding: 10px;">
                                 <table style="width: 100%;">
                                     <tr>
                                         <td style="width: 60%;">
@@ -83,9 +83,9 @@
                                             <h5><b>Tình trạng Thanh toán</b></h5>
                                         </td>
                                         <td colspan="3" style="text-align:right;">
-                                            <input type="radio" name="PaymentStatus" value="false" onchange="showPaymentMethodForm(this);"/> Chưa thanh toán
+                                            <input type="radio" name="PaymentStatus" value="false" onchange="showPaymentMethodForm(this);" /> Chưa thanh toán
                                             <span style="margin:10px"></span>
-                                            <input type="radio" name="PaymentStatus" value="true" onchange="showPaymentMethodForm(this);"/> Đã thanh toán
+                                            <input type="radio" name="PaymentStatus" value="true" onchange="showPaymentMethodForm(this);" /> Đã thanh toán
                                         </td>
                                     </tr>
                                     <tr>
@@ -112,31 +112,57 @@
                             </div>
                         </div>
 
-                        <div class="col-lg-3" style="border-radius: 10px; border: 2px solid #ccc; padding: 10px; ">
-                            <h4>
-                                Nhà cung cấp
-                                <a href="#" id="addSupplierBtn" style="float:right; font-size : 0.8em;@(isAdmin || (credentials != null && credentials.Contains("ADD_SUPPLIER")) ? "" : "pointer-events: none;")">
-                                    + Thêm nhà cung cấp
-                                </a>
-                            </h4>
-                            <form id="searchSupplierForm" action="@Url.Action("SearchSupplier", "Receipt")" method="post">
-                                <input type="hidden" name="SearchProduct" value="@Model.SearchProduct" />
-                                <div class="input-group">
-                                    <input type="text" class="form-control" name="SearchSupplier" value="@Model.SearchSupplier" placeholder="Nhập số điện thoại nhà cung cấp">
-                                    <div class="input-group-btn">
-                                        <button class="btn btn-primary" id="showSupplier">
-                                            <i class="fa fa-search"></i>
-                                        </button>
+                        <div class="col-lg-3">
+                            <div style="border-radius: 10px; border: 2px solid #ccc; margin:0 -15px; padding: 10px;">
+                                <h4>
+                                    Nhà cung cấp
+                                    <a href="#" id="addSupplierBtn" style="float:right; font-size : 0.8em;@(isAdmin || (credentials != null && credentials.Contains("ADD_SUPPLIER")) ? "" : "pointer-events: none;")">
+                                        + Thêm nhà cung cấp
+                                    </a>
+                                </h4>
+                                <form id="searchSupplierForm" action="@Url.Action("SearchSupplier", "Receipt")" method="post">
+                                    <input type="hidden" name="SearchProduct" value="@Model.SearchProduct" />
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" name="SearchSupplier" value="@Model.SearchSupplier" placeholder="Nhập số điện thoại nhà cung cấp">
+                                        <div class="input-group-btn">
+                                            <button class="btn btn-primary" id="showSupplier">
+                                                <i class="fa fa-search"></i>
+                                            </button>
+                                        </div>
                                     </div>
-                                </div>
-                            </form>
-                            <br />
-                            <div id="supplierInfo">
-                                @if (Model.Supplier != null)
-                                {
-                                    @Html.Partial("_SupplierInfo", Model.Supplier)
-                                }
+                                </form>
+                                <br />
+                                <div id="supplierInfo">
+                                    @if (Model.Supplier != null)
+                                    {
+                                        @Html.Partial("_SupplierInfo", Model.Supplier)
+                                    }
 
+                                </div>
+                            </div>
+                            <div style="border-radius: 10px; border: 2px solid #ccc; margin: 10px -15px; padding: 10px;">
+                                <h4>
+                                    Thông tin người nhập
+                                </h4>
+                                <form id="searchEmployeeForm" action="@Url.Action("SearchEmployee", "Receipt")" method="post">
+                                    <input type="hidden" name="SearchProduct" value="@Model.SearchProduct" />
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" name="SearchEmployee" value="@Model.SearchEmployee" placeholder="Nhập số điện thoại">
+                                        <div class="input-group-btn">
+                                            <button class="btn btn-primary">
+                                                <i class="fa fa-search"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                                <br />
+                                <div id="employeeInfo">
+                                    @if (Model.Employee != null)
+                                    {
+                                        @Html.Partial("_EmployeeInfo", Model.Employee)
+                                    }
+
+                                </div>
                             </div>
                         </div>
 
@@ -274,6 +300,24 @@
             });
         });
     });
+
+    $(document).ready(function () {
+        $('#searchEmployeeForm').submit(function (e) {
+            e.preventDefault();
+
+            var formData = $(this).serialize();
+
+            $.ajax({
+                url: $(this).attr('action'),
+                type: $(this).attr('method'),
+                data: formData,
+                success: function (response) {
+                    $('#employeeInfo').html(response);
+                }
+            });
+        });
+    });
+
     $('#addSupplierBtn').click(function () {
         $('#addsuppliermodal').modal('show');
     });
@@ -366,7 +410,7 @@
                     ImportPrice: importPrice
                 });
             });
-            if (receiptDetails.length === 0 || !$('#supplierId').val() || !$('input[name="PaymentStatus"]:checked').val()
+            if (receiptDetails.length === 0 || !$('#supplierId').val() || !$('#employeeId').val() || !$('input[name="PaymentStatus"]:checked').val()
                 || ($('input[name="PaymentStatus"]:checked').val() ==="true" && !$('input[name="Payment"]:checked').val())) {
                 alert('Chưa đủ dữ liệu để lưu');
                 return;
@@ -389,6 +433,9 @@
                             Email: $('#supplierEmail').val(),
                             Phone: $('#supplierPhone').val(),
                             Address: $('#supplierAddress').val()
+                        },
+                        Employee: {
+                            ID: $('#employeeId').val()                          
                         },
                         LstReceiptDetail: receiptDetails
                     }
@@ -451,7 +498,7 @@
         calculateTotalAmount();
         totalPrice();
     });
- 
+
 </script>
 
 

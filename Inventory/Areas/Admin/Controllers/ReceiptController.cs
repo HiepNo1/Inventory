@@ -19,6 +19,7 @@ namespace Inventory.Areas.Admin.Controllers
         private ReceiptDetailDao receiptDetailDao = new ReceiptDetailDao();
         private SupplierDao supplierDao = new SupplierDao();
         private ProductDao productDao = new ProductDao();
+        private EmployeeDao employeeDao = new EmployeeDao();
         // GET: Admin/Receipt
         [HasCredential(RoleID = "VIEW_RECEIPT")]
         public ActionResult Index(string searchString, bool? paymentStatus, DateTime? createDate, int page = 1, int pageSize = 5)
@@ -39,12 +40,13 @@ namespace Inventory.Areas.Admin.Controllers
 
         [HasCredential(RoleID = "ADD_RECEIPT")]
         [HttpGet]
-        public ActionResult Create(string searchSupplier, string searchProduct)
+        public ActionResult Create(string searchSupplier, string searchProduct, string searchEmployee)
         {
             Session.Remove("SelectedReceipts");
             CreateReceiptViewModel receiptViewModel = new CreateReceiptViewModel();
             receiptViewModel.SearchProduct = searchProduct;
             receiptViewModel.SearchSupplier = searchSupplier;
+            receiptViewModel.SearchEmployee = searchEmployee;
             return View(receiptViewModel);
         }
 
@@ -55,16 +57,16 @@ namespace Inventory.Areas.Admin.Controllers
             if (ModelState.IsValid)
             {
 
-                if (receiptViewModel.LstReceiptDetail == null || receiptViewModel.LstReceiptDetail.Count == 0 || receiptViewModel.Supplier == null)
+                if (receiptViewModel.LstReceiptDetail == null || receiptViewModel.LstReceiptDetail.Count == 0 || receiptViewModel.Supplier == null || receiptViewModel.Employee == null)
                 {
-                    TempData["message"] = new XMessage("success", "Chưa đủ dữ liệu để lưu");
+                    TempData["message"] = new XMessage("danger", "Chưa đủ dữ liệu để lưu");
                     return View(receiptViewModel);
                 }
                 var receipt = new Receipt()
                 {
                     SupplierID = receiptViewModel.Supplier.ID,
                     CreateBy = GetUserSession().UserName,
-                    EmployeeID = 3,
+                    EmployeeID = receiptViewModel.Employee.ID,
                     Description = receiptViewModel.Receipt.Description,
                     PaymentStatus = receiptViewModel.Receipt.PaymentStatus,
                     Payment = receiptViewModel.Receipt.Payment
@@ -122,6 +124,35 @@ namespace Inventory.Areas.Admin.Controllers
             }
 
             return PartialView("_SupplierInfo", receiptViewModel.Supplier);
+        }
+
+        [HttpPost]
+        public ActionResult SearchEmployee(string searchEmployee)
+        {
+            var receiptViewModel = new CreateReceiptViewModel();
+            receiptViewModel.SearchSupplier = searchEmployee;
+
+            if (!string.IsNullOrEmpty(searchEmployee))
+            {
+                var foundEmployee = employeeDao.GetByPhone(searchEmployee);
+                if (foundEmployee != null)
+                {
+                    receiptViewModel.Employee = new Employee
+                    {
+                        ID = foundEmployee.ID,
+                        Name = foundEmployee.Name,
+                        Phone = foundEmployee.Phone,
+                        Address = foundEmployee.Address,
+                        Email = foundEmployee.Email,
+                    };
+                }
+                else
+                {
+                    TempData["messagePartial"] = new XMessage("danger", "Không tìm thấy nhân viên với số điện thoại vừa nhập !");
+                }
+            }
+
+            return PartialView("_EmployeeInfo", receiptViewModel.Employee);
         }
 
         [HttpPost]

@@ -269,7 +269,7 @@ namespace Inventory.Areas.Admin.Controllers
         {
             try
             {
-                var top10Products = LstProduct(startDate, endDate);               
+                var top10Products = LstProduct(startDate, endDate);
                 var productNames = top10Products.Select(x => x.ProductName).ToList();
                 var quantities = top10Products.Select(x => x.Quantity).ToList();
 
@@ -304,7 +304,7 @@ namespace Inventory.Areas.Admin.Controllers
 
                 IRow infoRow = sheet.CreateRow(rownum++);
                 infoRow.CreateCell(0).SetCellValue("THỐNG KÊ SỐ LƯỢNG SẢN PHẨM BÁN ĐƯỢC");
-                sheet.AddMergedRegion(new CellRangeAddress(0,0,0,3));
+                sheet.AddMergedRegion(new CellRangeAddress(0, 0, 0, 3));
                 infoRow = sheet.CreateRow(rownum++);
                 infoRow.CreateCell(0).SetCellValue("Từ ngày: " + startDate.ToString("dd-MM-yyyy"));
                 infoRow = sheet.CreateRow(rownum++);
@@ -346,41 +346,41 @@ namespace Inventory.Areas.Admin.Controllers
         {
             var endOfDay = endDate.AddDays(1).AddSeconds(-1);
             return (from od in db.OrderDetails
-                                 join o in db.Orders on od.OrderID equals o.ID
-                                 join p in db.Products on od.ProductID equals p.ID
-                                 where o.CreateDate >= startDate && o.CreateDate <= endOfDay
-                                 group new { od, p } by new { p.ID, p.Name, p.Image, p.Quantity, p.Price } into g
-                                 orderby g.Sum(x => x.od.Quantity) descending
-                                 select new ProductInStatistics()
-                                 {
-                                     ProductID = g.Key.ID,
-                                     ProductName = g.Key.Name,
-                                     ProductImage = g.Key.Image,
-                                     ProductPrice = g.Key.Price,
-                                     StockQuantity = g.Key.Quantity,
-                                     Quantity = g.Sum(x => x.od.Quantity)
-                                 }).Take(10).ToList();
+                    join o in db.Orders on od.OrderID equals o.ID
+                    join p in db.Products on od.ProductID equals p.ID
+                    where o.CreateDate >= startDate && o.CreateDate <= endOfDay
+                    group new { od, p } by new { p.ID, p.Name, p.Image, p.Quantity, p.Price } into g
+                    orderby g.Sum(x => x.od.Quantity) descending
+                    select new ProductInStatistics()
+                    {
+                        ProductID = g.Key.ID,
+                        ProductName = g.Key.Name,
+                        ProductImage = g.Key.Image,
+                        ProductPrice = g.Key.Price,
+                        StockQuantity = g.Key.Quantity,
+                        Quantity = g.Sum(x => x.od.Quantity)
+                    }).Take(10).ToList();
         }
 
         public List<OrderInStatistics> LstOrder(DateTime startDate, DateTime endDate, int? orderType)
         {
             var endOfDay = endDate.AddDays(1).AddSeconds(-1);
             return (from o in db.Orders
-                          join c in db.Customers on o.CustomerID equals c.ID
-                          where o.CreateDate >= startDate && o.CreateDate <= endOfDay && (orderType == null || o.Status == orderType)
-                          select new OrderInStatistics()
-                          {
-                              OrderCode = o.Code,
-                              CustomerName = c.Name,
-                              CustomerPhone = c.Phone,
-                              ProductCount = (from od in db.OrderDetails where od.OrderID == o.ID select od.Quantity).Sum(),
-                              ShippingFee = o.ShippingFee,
-                              OrderDate = o.CreateDate,
-                              Revenue = (from od in db.OrderDetails
-                                         join p in db.Products on od.ProductID equals p.ID
-                                         where od.OrderID == o.ID
-                                         select od.Quantity * p.Price).Sum() + o.ShippingFee
-                          }).ToList();
+                    join c in db.Customers on o.CustomerID equals c.ID
+                    where o.CreateDate >= startDate && o.CreateDate <= endOfDay && (orderType == null || o.Status == orderType)
+                    select new OrderInStatistics()
+                    {
+                        OrderCode = o.Code,
+                        CustomerName = c.Name,
+                        CustomerPhone = c.Phone,
+                        ProductCount = (from od in db.OrderDetails where od.OrderID == o.ID select od.Quantity).Sum(),
+                        ShippingFee = o.ShippingFee,
+                        OrderDate = o.CreateDate,
+                        Revenue = (from od in db.OrderDetails
+                                   join p in db.Products on od.ProductID equals p.ID
+                                   where od.OrderID == o.ID
+                                   select od.Quantity * p.Price).Sum() + o.ShippingFee
+                    }).ToList();
         }
     }
 }

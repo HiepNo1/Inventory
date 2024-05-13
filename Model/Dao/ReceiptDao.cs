@@ -19,8 +19,8 @@ namespace Model.Dao
         private IQueryable<ReceiptViewModel> inputOrder()
         {
             return (from a in db.Receipts
-                    join b in db.Suppliers
-                    on a.SupplierID equals b.ID
+                    join b in db.Suppliers on a.SupplierID equals b.ID
+                    join c in db.Employees on a.EmployeeID equals c.ID
                     select new ReceiptViewModel()
                     {
                         ID = a.ID,
@@ -33,7 +33,12 @@ namespace Model.Dao
                         PaymentStatus = a.PaymentStatus,
                         Description = a.Description,
                         Status = a.Status,
-                        CreateDate = a.CreateDate
+                        CreateDate = a.CreateDate,
+                        EmployeeName = c.Name,
+                        EmployeePhone = c.Phone,
+                        EmployeeAddress = c.Address,
+                        EmployeeEmail = c.Email,
+                        EmployeeGender = c.Gender
                     });
         }
         public IEnumerable<ReceiptViewModel> GetList(string catePage, string searchString, bool? paymentStatus, DateTime? createDate, int page, int pageSize)
@@ -70,7 +75,7 @@ namespace Model.Dao
         public void Insert(Receipt receipt)
         {
             receipt.CreateDate = DateTime.Now;
-            var lastID = db.Orders.OrderByDescending(x => x.ID).Select(x => x.ID).FirstOrDefault();
+            var lastID = db.Receipts.OrderByDescending(x => x.ID).Select(x => x.ID).FirstOrDefault();
             var newID = lastID + 1;
             receipt.Code = "PN" + newID.ToString("D4");
             db.Receipts.Add(receipt);

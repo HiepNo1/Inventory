@@ -46,7 +46,6 @@
                                         <option value="">Trạng thái</option>
                                         <option value="true" @(ViewBag.paymentStatus == true ? "selected" : "")>Đã thanh toán</option>
                                         <option value="false" @(ViewBag.paymentStatus == false ? "selected" : "")>Chưa thanh toán</option>
-
                                     </select>
                                 </div>
                             </div>
@@ -54,7 +53,6 @@
                     </div>
                     <div class="col-lg-6 text-right">
                         <a href="~/Admin/Receipt/Create" @(isAdmin || (credentials != null && credentials.Contains("ADD_RECEIPT")) ? "" : "disabled") class="btn btn-success"><i class="bi bi-plus"></i> Thêm mới</a>
-                        <a href="~/Admin/Receipt/Trash" class="btn btn-danger"><i class="bi bi-trash"></i> Thùng rác</a>
                     </div>
                 </div>
             </div>
@@ -65,9 +63,9 @@
                         <thead>
                             <tr>
                                 <th>Mã phiếu nhập</th>
-                                <th>Tên nhà cung cấp</th>
-                                <th>SĐT Nhà cung cấp</th>
-                                <th>Ngày tạo</th>
+                                <th>Nhà cung cấp</th>
+                                <th>Người nhập</th>
+                                <th>Ngày nhập</th>
                                 <th>Hình thức thanh toán</th>
                                 <th>Trạng thái thanh toán</th>
                                 <th></th>
@@ -79,14 +77,18 @@
                             {
                                 <tr>
                                     <td>@item.Code</td>
-                                    <td>@item.SupplierName</td>
-                                    <td>@CommonConstants.FormatPhoneNum(item.SupplierPhone)</td>
+                                    <td>@item.SupplierName
+                                    <br />
+                                    SĐT : @CommonConstants.FormatPhoneNum(item.SupplierPhone)</td>
+                                    <td>@item.EmployeeName
+                                    <br />
+                                    SĐT : @CommonConstants.FormatPhoneNum(item.EmployeePhone)</td>
                                     <td>@item.CreateDate.ToString("dd/MM/yyyy")</td>
                                     <td>
                                         @{
                                             if (item.Payment == false)
                                             {<span>Tiền mặt</span>}
-                                            if (item.Payment == true)
+                                            else if (item.Payment == true)
                                             {<span>Chuyển khoản</span>}
                                             else
                                             {
